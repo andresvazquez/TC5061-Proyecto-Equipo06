@@ -21,6 +21,13 @@ MODELS_DIR = PROJ_ROOT / "models"
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 
+# Manifiesto de datos (registros y hash de cada archivo): va en references/ y sí se sube a Git
+MANIFEST_PATH = PROJ_ROOT / "references" / "data_manifest.csv"
+
+# Rango de meses de la ingesta (AAAA-MM)
+FECHA_INICIO = "2023-01"
+FECHA_FIN = "2026-09"
+
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135
 try:
