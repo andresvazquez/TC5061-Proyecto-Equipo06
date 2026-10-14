@@ -1,14 +1,14 @@
-ipython
-jupyterlab
+ipython==9.17.1
+jupyterlab==4.6.4
 loguru==0.7.3
-matplotlib
-notebook
-numpy
+matplotlib==3.11.2
+notebook==7.6.3
+numpy==2.5.4
 pandas==2.3.3
-pip
+pip==26.2.1
 python-dotenv==1.2.4
-ruff
-scikit-learn
+ruff==0.17.0
+scikit-learn==1.9.1
 tqdm==4.70.1
-typer
+typer==0.27.3
 -e .
