@@ -27,6 +27,14 @@ MANIFEST_PATH = PROJ_ROOT / "references" / "data_manifest.csv"
 # Rango de meses de la ingesta (AAAA-MM)
 FECHA_INICIO = "2023-06"
 FECHA_FIN = "2026-09"
+# Fuente de datos de MiBici
+PORTAL_URL = "https://mibici.net/es/datos-abiertos/"
+
+# Catalogo de estaciones
+NOMENCLATURA_URL = (
+    "https://mibici.net/site/assets/files/1118/"
+    "nomenclatura_2026_09.csv"
+)
 
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135
