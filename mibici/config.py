@@ -25,7 +25,7 @@ FIGURES_DIR = REPORTS_DIR / "figures"
 MANIFEST_PATH = PROJ_ROOT / "references" / "data_manifest.csv"
 
 # Rango de meses de la ingesta (AAAA-MM)
-FECHA_INICIO = "2023-01"
+FECHA_INICIO = "2023-06"
 FECHA_FIN = "2026-09"
 
 # If tqdm is installed, configure loguru with tqdm.write
