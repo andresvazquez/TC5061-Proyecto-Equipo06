@@ -1,13 +1,14 @@
-import re
+from datetime import datetime
 import hashlib
 import os
-from datetime import datetime
 from pathlib import Path
+import re
 from urllib.parse import urljoin, urlparse
 import pandas as pd
 
-import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+import requests
 
 from mibici import config  # config.py: FECHA_INICIO, FECHA_FIN, MANIFEST_PATH
 
@@ -290,8 +291,96 @@ def descargar_nomenclatura(destino):
 
 # Normalizar nombres de columnas, codificación de caracteres y tipos de fecha
 def normalizar_mes(ruta_csv):
-    # Recibe la ruta de un CSV crudo y devuelve la tabla normalizada, sin datos personales
-    raise NotImplementedError("pendiente de implementar")
+    """
+    Normaliza un archivo mensual de viajes de MiBici.
+
+    La funcion:
+    - Lee archivos con codificacion UTF-8 o ISO-8859-1.
+    - Normaliza los nombres de las columnas.
+    - Convierte las columnas de fecha a datetime.
+    - Elimina las variables personales que no se utilizaran en el proyecto.
+
+    Args:
+        ruta_csv (str | Path): Ruta al archivo CSV mensual.
+
+    Returns:
+        pd.DataFrame: Tabla normalizada sin datos personales.
+    """
+    ruta_csv = Path(ruta_csv)
+
+    # 1. Verificar que el archivo exista
+    if not ruta_csv.exists():
+        raise FileNotFoundError(
+            f"No se encontro el archivo: {ruta_csv}"
+        )
+
+    # 2. Intentar primero UTF-8 y usar ISO-8859-1 como respaldo
+    try:
+        tabla = pd.read_csv(
+            ruta_csv,
+            encoding="utf-8"
+        )
+    except UnicodeDecodeError:
+        tabla = pd.read_csv(
+            ruta_csv,
+            encoding="iso-8859-1"
+        )
+
+    # 3. Normalizar nombres de columnas
+    tabla.columns = (
+        tabla.columns
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_", regex=False)
+        .str.replace("á", "a", regex=False)
+        .str.replace("é", "e", regex=False)
+        .str.replace("í", "i", regex=False)
+        .str.replace("ó", "o", regex=False)
+        .str.replace("ú", "u", regex=False)
+        .str.replace("ñ", "n", regex=False)
+    )
+
+    # 4. Columnas requeridas por el pipeline
+    columnas_requeridas = {
+        "viaje_id",
+        "inicio_del_viaje",
+        "fin_del_viaje",
+        "origen_id",
+        "destino_id",
+    }
+
+    faltantes = columnas_requeridas - set(tabla.columns)
+
+    if faltantes:
+        raise ValueError(
+            "Faltan columnas requeridas: "
+            + ", ".join(sorted(faltantes))
+        )
+
+    # 5. Convertir las fechas
+    tabla["inicio_del_viaje"] = pd.to_datetime(
+        tabla["inicio_del_viaje"],
+        errors="coerce"
+    )
+
+    tabla["fin_del_viaje"] = pd.to_datetime(
+        tabla["fin_del_viaje"],
+        errors="coerce"
+    )
+
+    # 6. Eliminar datos personales
+    columnas_personales = [
+        "usuario_id",
+        "genero",
+        "ano_de_nacimiento",
+    ]
+
+    tabla = tabla.drop(
+        columns=columnas_personales,
+        errors="ignore"
+    )
+
+    return tabla
 
 
 def guardar_parquet(tabla: pd.DataFrame, ruta_csv: str) -> tuple[str, int]:
