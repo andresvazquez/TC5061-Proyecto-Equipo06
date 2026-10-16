@@ -1,4 +1,5 @@
 import hashlib
+import os
 
 import pandas as pd
 
@@ -27,10 +28,18 @@ def normalizar_mes(ruta_csv):
     raise NotImplementedError("pendiente de implementar")
 
 
-# Guardar los datos limpios en un formato eficiente para grandes volúmenes (por ejemplo, Parquet)
-def guardar_parquet(tabla, ruta_csv):
-    # Guarda la tabla en Parquet y devuelve la ruta y el número de registros
-    raise NotImplementedError("pendiente de implementar")
+def guardar_parquet(tabla: pd.DataFrame, ruta_csv: str) -> tuple[str, int]:
+    # Define la ruta de salida .parquet
+    ruta_parquet = os.path.splitext(ruta_csv)[0] + ".parquet"
+
+    # Guarda el DataFrame en formato Parquet
+    tabla.to_parquet(ruta_parquet, index=False)
+
+    #Obtiene el número de filas/registros
+    num_registros = len(tabla)
+
+    #Devuelve la ruta y el número de registros según la especificación
+    return ruta_parquet, num_registros
 
 
 # Versionar los datos con el mecanismo propuesto
