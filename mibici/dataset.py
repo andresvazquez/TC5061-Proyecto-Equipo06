@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+import pandas as pd
 
 import requests
 from bs4 import BeautifulSoup
