@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 import re
 from urllib.parse import urljoin, urlparse
-import pandas as pd
 
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -358,27 +357,27 @@ def normalizar_mes(ruta_csv):
         )
 
     # 5. Convertir las fechas
+    # 2023-11, 2024-09 y 2024-10 vienen como dd/mm/aaaa h:mm
+    formato = None
+    if "/" in str(tabla["inicio_del_viaje"].iloc[0]):
+        formato = "%d/%m/%Y %H:%M"
+
     tabla["inicio_del_viaje"] = pd.to_datetime(
         tabla["inicio_del_viaje"],
+        format=formato,
         errors="coerce"
     )
 
     tabla["fin_del_viaje"] = pd.to_datetime(
         tabla["fin_del_viaje"],
+        format=formato,
         errors="coerce"
     )
 
     # 6. Eliminar datos personales
-    columnas_personales = [
-        "usuario_id",
-        "genero",
-        "ano_de_nacimiento",
-    ]
-
-    tabla = tabla.drop(
-        columns=columnas_personales,
-        errors="ignore"
-    )
+    # Se borran por posicion (usuario, genero y año de nacimiento) porque en
+    # 2024-02 y 2024-05 el encabezado del año viene corrupto
+    tabla = tabla.drop(columns=tabla.columns[[1, 2, 3]])
 
     return tabla
 
