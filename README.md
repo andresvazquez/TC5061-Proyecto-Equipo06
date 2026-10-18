@@ -109,7 +109,42 @@ Los Pull Requests se fusionan solo con squash merge, así que cada uno queda com
 
 ### Convención de ramas y commits
 
-Por completar.
+Seguimos [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) para los commits y una convención equivalente para los nombres de las ramas.
+
+#### Commits
+
+Formato: `tipo: descripción corta` o `tipo(alcance): descripción corta`
+
+- La descripción va en español, en imperativo presente (por ejemplo, agrega o corrige), en minúsculas y sin punto final.
+- Un commit por cambio con sentido propio.
+- Tipos que usamos:
+  - `feat`: función o característica nueva (por ejemplo, la descarga de los meses).
+  - `fix`: corrección de un error.
+  - `docs`: cambios en documentación (README, ML Canvas, diagrama).
+  - `refactor`: reorganizar código sin cambiar lo que hace.
+  - `chore`: tareas de mantenimiento o de armado (estructura, dependencias, `.gitignore`).
+
+Ejemplos:
+
+- `feat: descarga los meses y la nomenclatura de estaciones`
+- `fix: corrige la lectura de archivos con codificación latin-1`
+- `docs: agrega el ML Canvas a references`
+- `chore: fija las versiones de las dependencias`
+
+#### Ramas
+
+Formato: `tipo/descripcion-corta`
+
+- Mismos tipos que en los commits (`feat/`, `fix/`, `docs/`, etc.).
+- En minúsculas, con guiones entre palabras, sin acentos, ñ ni espacios.
+- Una rama por tarea, creada a partir de main.
+
+Ejemplos:
+
+- `feat/ingesta-mensual`
+- `feat/manifiesto-datos`
+- `docs/ml-canvas`
+- `chore/gitignore`
 
 ### Pull Requests y revisiones
 
