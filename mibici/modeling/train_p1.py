@@ -77,19 +77,21 @@ def guardar_grafica_predicciones(
 
 
 def dividir_train_val_test(
-    df: pd.DataFrame, prop_train: float = 0.7, prop_val: float = 0.15
+    df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Separa temporalmente el dataset de forma cronológica en Train, Val y Test.
+    Separa temporalmente el dataset de forma explícita utilizando
+    las fechas de corte definidas en config.py.
     """
-    corte_train = df["hora"].quantile(prop_train).floor("d")
-    corte_val = df["hora"].quantile(prop_train + prop_val).floor("d")
+    # Convertir a Timestamp para asegurar compatibilidad de tipos con la columna 'hora'
+    inicio_val = pd.Timestamp(config.INICIO_VALIDACION)
+    inicio_test = pd.Timestamp(config.INICIO_PRUEBA)
 
-    train = df[df["hora"] < corte_train].copy()
-    val = df[(df["hora"] >= corte_train) & (df["hora"] < corte_val)].copy()
-    test = df[df["hora"] >= corte_val].copy()
+    train = df[df["hora"] < inicio_val].copy()
+    val = df[(df["hora"] >= inicio_val) & (df["hora"] < inicio_test)].copy()
+    test = df[df["hora"] >= inicio_test].copy()
 
-    print(f"Corte Train/Val: {corte_train} | Corte Val/Test: {corte_val}")
+    print(f"Corte Train -> Val: {inicio_val} | Corte Val -> Test: {inicio_test}")
     return train, val, test
 
 
@@ -119,8 +121,8 @@ def main():
 
     df_features = construir_features_p1(df_viajes, nomenclatura_clean)
 
-    # 3. División temporal 70% Train / 15% Val / 15% Test
-    train, val, test = dividir_train_val_test(df_features, prop_train=0.7, prop_val=0.15)
+    # 3. División train test val
+    train, val, test = dividir_train_val_test(df_features)
 
     X_cols = [
         "hora_del_dia",
@@ -177,8 +179,8 @@ def main():
                 "modelo_tipo": "HistGradientBoostingRegressor",
                 "random_state": 42,
                 "n_features": len(X_cols),
-                "prop_train": 0.7,
-                "prop_val": 0.15,
+                "inicio_validacion": str(config.INICIO_VALIDACION),
+                "inicio_prueba": str(config.INICIO_PRUEBA),
             }
         )
 
