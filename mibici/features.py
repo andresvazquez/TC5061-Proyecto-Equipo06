@@ -108,6 +108,16 @@ def perfil_uso_estacion(viajes, estaciones):
     - Saldo neto entre llegadas y salidas.
     - Capacidad de la estacion.
 
+    Incluye solo las estaciones que aparecen como origen o destino en los
+    viajes recibidos. El volumen_diario es el promedio de salidas por dia,
+    contando solo los dias con al menos una salida.
+
+    Para P3, el perfil horario distingue las estaciones segun el momento
+    del dia en que se usan; la proporcion de fin de semana permite comparar
+    patrones entre semana y fin de semana; el volumen diario representa la
+    intensidad de uso; el saldo neto indica si hay mas llegadas que salidas
+    o viceversa; y la capacidad representa el tamano de la estacion.
+
     Para evitar fuga de informacion, la funcion debe recibir unicamente
     viajes pertenecientes al periodo que se desea utilizar para clustering.
 
@@ -115,11 +125,12 @@ def perfil_uso_estacion(viajes, estaciones):
         viajes (pd.DataFrame): Viajes normalizados con las columnas
             viaje_id, inicio_del_viaje, fin_del_viaje, origen_id
             y destino_id.
-        estaciones (pd.DataFrame): Nomenclatura normalizada con las columnas
-            estacion_id y capacidad.
+        estaciones (pd.DataFrame): Nomenclatura de estaciones con las
+        columnas id y dpcapacity, o estacion_id y capacidad.
 
     Returns:
-        pd.DataFrame: Perfil agregado con una fila por estacion.
+        pd.DataFrame: Perfil agregado con una fila por estacion presenta
+            en los viajes recibidos.
     """
 
     columnas_viajes = {
@@ -129,6 +140,13 @@ def perfil_uso_estacion(viajes, estaciones):
         "origen_id",
         "destino_id",
     }
+
+    estaciones = estaciones.rename(
+        columns={
+            "id": "estacion_id",
+            "dpcapacity": "capacidad",
+        }
+    )
 
     columnas_estaciones = {
         "estacion_id",
