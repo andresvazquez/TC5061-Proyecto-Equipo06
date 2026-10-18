@@ -92,3 +92,186 @@ def features_p2(malla):
     resultado["salidas_hora_previa"] = salidas_hora_previa(malla)
     resultado["llegadas_hora_previa"] = llegadas_hora_previa(malla)
     return resultado
+
+
+# P3, perfil de uso por estacion
+
+
+def perfil_uso_estacion(viajes, estaciones):
+    """
+    Construye el perfil de uso de cada estacion para P3.
+
+    Resume los viajes en una fila por estacion utilizando:
+    - Perfil horario normalizado de salidas.
+    - Proporcion de salidas realizadas en fin de semana.
+    - Volumen diario promedio de salidas.
+    - Saldo neto entre llegadas y salidas.
+    - Capacidad de la estacion.
+
+    Incluye solo las estaciones que aparecen como origen o destino en los
+    viajes recibidos. El volumen_diario es el promedio de salidas por dia,
+    contando solo los dias con al menos una salida.
+
+    Para P3, el perfil horario distingue las estaciones segun el momento
+    del dia en que se usan; la proporcion de fin de semana permite comparar
+    patrones entre semana y fin de semana; el volumen diario representa la
+    intensidad de uso; el saldo neto indica si hay mas llegadas que salidas
+    o viceversa; y la capacidad representa el tamano de la estacion.
+
+    Para evitar fuga de informacion, la funcion debe recibir unicamente
+    viajes pertenecientes al periodo que se desea utilizar para clustering.
+
+    Args:
+        viajes (pd.DataFrame): Viajes normalizados con las columnas
+            viaje_id, inicio_del_viaje, fin_del_viaje, origen_id
+            y destino_id.
+        estaciones (pd.DataFrame): Nomenclatura de estaciones con las
+        columnas id y dpcapacity, o estacion_id y capacidad.
+
+    Returns:
+        pd.DataFrame: Perfil agregado con una fila por estacion presenta
+            en los viajes recibidos.
+    """
+
+    columnas_viajes = {
+        "viaje_id",
+        "inicio_del_viaje",
+        "fin_del_viaje",
+        "origen_id",
+        "destino_id",
+    }
+
+    estaciones = estaciones.rename(
+        columns={
+            "id": "estacion_id",
+            "dpcapacity": "capacidad",
+        }
+    )
+
+    columnas_estaciones = {
+        "estacion_id",
+        "capacidad",
+    }
+
+    faltantes_viajes = columnas_viajes - set(viajes.columns)
+    faltantes_estaciones = columnas_estaciones - set(estaciones.columns)
+
+    if faltantes_viajes:
+        raise ValueError(
+            "Faltan columnas requeridas en viajes: "
+            + ", ".join(sorted(faltantes_viajes))
+        )
+
+    if faltantes_estaciones:
+        raise ValueError(
+            "Faltan columnas requeridas en estaciones: "
+            + ", ".join(sorted(faltantes_estaciones))
+        )
+
+    viajes = viajes.copy()
+
+    # Variables temporales necesarias para construir el perfil
+    viajes["hora"] = viajes["inicio_del_viaje"].dt.hour
+    viajes["fecha"] = viajes["inicio_del_viaje"].dt.normalize()
+    viajes["fin_semana"] = (
+        viajes["inicio_del_viaje"].dt.dayofweek >= 5
+    )
+
+    # Salidas por estacion
+    salidas = (
+        viajes.groupby("origen_id")
+        .size()
+        .rename("salidas")
+    )
+
+    # Llegadas por estacion
+    llegadas = (
+        viajes.groupby("destino_id")
+        .size()
+        .rename("llegadas")
+    )
+
+    # Volumen diario promedio de salidas
+    salidas_diarias = (
+        viajes.groupby(["origen_id", "fecha"])
+        .size()
+        .groupby("origen_id")
+        .mean()
+        .rename("volumen_diario")
+    )
+
+    # Proporcion de salidas realizadas en fin de semana
+    proporcion_fin_semana = (
+        viajes.groupby("origen_id")["fin_semana"]
+        .mean()
+        .rename("proporcion_fin_semana")
+    )
+
+    # Perfil horario de salidas
+    perfil_horario = (
+        viajes.groupby(["origen_id", "hora"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(columns=range(24), fill_value=0)
+    )
+
+    # Normalizar cada perfil horario por el total de salidas de la estacion
+    totales_horarios = perfil_horario.sum(axis=1)
+
+    perfil_horario = perfil_horario.div(
+        totales_horarios.replace(0, np.nan),
+        axis=0,
+    ).fillna(0)
+
+    perfil_horario.columns = [
+        f"perfil_h{hora:02d}"
+        for hora in perfil_horario.columns
+    ]
+
+    # Unir las variables agregadas
+    perfil = pd.concat(
+        [
+            salidas,
+            llegadas,
+            salidas_diarias,
+            proporcion_fin_semana,
+            perfil_horario,
+        ],
+        axis=1,
+    ).fillna(0)
+
+    # Saldo positivo indica mas llegadas que salidas
+    perfil["saldo_neto"] = (
+        perfil["llegadas"] - perfil["salidas"]
+    )
+
+    perfil.index.name = "estacion_id"
+    perfil = perfil.reset_index()
+
+    # Incorporar capacidad desde la nomenclatura
+    perfil = perfil.merge(
+        estaciones[["estacion_id", "capacidad"]],
+        on="estacion_id",
+        how="left",
+        validate="one_to_one",
+    )
+
+    return perfil
+
+
+# P1 y base, malla estacion por hora (15a, Christian)
+def construir_malla(viajes, estaciones):
+    """
+    Arma la malla de una fila por estacion y hora (todas las horas, con ceros si no hubo viajes).
+    Recibe viajes y estaciones, devuelve estacion_id, hora (fecha y hora), salidas, llegadas y capacidad.
+    """
+    raise NotImplementedError("Pendiente por trabajar")
+
+
+# P2, etiqueta de riesgo (15b, Juan Pablo)
+def etiqueta_riesgo(malla):
+    """
+    Agrega a la malla el inventario estimado y el riesgo.
+    Recibe la malla, devuelve una copia con inventario_estimado (al final de cada hora) y riesgo (0 o 1).
+    """
+    raise NotImplementedError("Pendiente por trabajar")
