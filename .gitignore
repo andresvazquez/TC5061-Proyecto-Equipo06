@@ -5,7 +5,6 @@ data/
 mlruns/
 mlartifacts/
 mlflow.db
-reports/figures/*.png
 
 # Mac OS-specific storage files
 .DS_Store
