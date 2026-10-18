@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,6 +28,17 @@ MANIFEST_PATH = PROJ_ROOT / "references" / "data_manifest.csv"
 # Rango de meses de la ingesta (AAAA-MM)
 FECHA_INICIO = "2023-06"
 FECHA_FIN = "2026-09"
+# MLflow: la URI se puede cambiar con la variable MLFLOW_TRACKING_URI (o en el .env)
+TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
+EXPERIMENTO = "mibici-equipo06"
+
+# Semilla de los modelos
+SEMILLA = 42
+
+# Dónde empiezan la validación y la prueba (antes de la validación es entrenamiento)
+INICIO_VALIDACION = "2026-04-01"
+INICIO_PRUEBA = "2026-07-01"
+
 # Fuente de datos de MiBici
 PORTAL_URL = "https://mibici.net/es/datos-abiertos/"
 
