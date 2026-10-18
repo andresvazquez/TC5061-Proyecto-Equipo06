@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 # P2, variables del modelo (15c)
 # Trabajan sobre la malla estacion por hora, con las columnas estacion_id,
@@ -260,12 +261,132 @@ def perfil_uso_estacion(viajes, estaciones):
 
 
 # P1 y base, malla estacion por hora (15a, Christian)
-def construir_malla(viajes, estaciones):
-    """
-    Arma la malla de una fila por estacion y hora (todas las horas, con ceros si no hubo viajes).
-    Recibe viajes y estaciones, devuelve estacion_id, hora (fecha y hora), salidas, llegadas y capacidad.
-    """
-    raise NotImplementedError("Pendiente por trabajar")
+def construir_malla(
+    viajes: pd.DataFrame, estaciones: str | Path | pd.DataFrame
+) -> pd.DataFrame:
+    """Arma la malla espacio-temporal (estación x hora) con salidas, llegadas y metadatos."""
+    if isinstance(estaciones, (str, Path)):
+        df_estaciones = pd.read_csv(estaciones)
+    else:
+        df_estaciones = estaciones.copy()
+
+    # Normalizar id de estación
+    if "origen_id" in df_estaciones.columns:
+        df_estaciones = df_estaciones.rename(columns={"origen_id": "estacion_id"})
+    elif "id" in df_estaciones.columns:
+        df_estaciones = df_estaciones.rename(
+            columns={"id": "estacion_id", "dpcapacity": "capacidad"}
+        )
+
+    estaciones_ids = df_estaciones["estacion_id"].unique()
+
+    # Normalizar viajes
+    df_viajes = viajes.copy()
+    col_origen = "origen_id" if "origen_id" in df_viajes.columns else "origen_estacion"
+    col_destino = "destino_id" if "destino_id" in df_viajes.columns else "destino_estacion"
+
+    df_viajes["inicio_del_viaje"] = pd.to_datetime(df_viajes["inicio_del_viaje"])
+    df_viajes["fin_del_viaje"] = pd.to_datetime(df_viajes["fin_del_viaje"])
+
+    min_fecha = df_viajes["inicio_del_viaje"].min().floor("h")
+    max_fecha = df_viajes["inicio_del_viaje"].max().ceil("h")
+    rango_horas = pd.date_range(start=min_fecha, end=max_fecha, freq="h")
+
+    # Producto cartesiano
+    malla_index = pd.MultiIndex.from_product(
+        [estaciones_ids, rango_horas], names=["estacion_id", "hora"]
+    )
+    malla = pd.DataFrame(index=malla_index).reset_index()
+
+    # Conteo de salidas y llegadas
+    df_viajes["hora_inicio"] = df_viajes["inicio_del_viaje"].dt.floor("h")
+    salidas = (
+        df_viajes.groupby([col_origen, "hora_inicio"])
+        .size()
+        .reset_index(name="salidas")
+    )
+
+    df_viajes["hora_fin"] = df_viajes["fin_del_viaje"].dt.floor("h")
+    llegadas = (
+        df_viajes.groupby([col_destino, "hora_fin"])
+        .size()
+        .reset_index(name="llegadas")
+    )
+
+    malla = malla.merge(
+        salidas,
+        left_on=["estacion_id", "hora"],
+        right_on=[col_origen, "hora_inicio"],
+        how="left",
+    ).drop(columns=[col_origen, "hora_inicio"], errors="ignore")
+
+    malla = malla.merge(
+        llegadas,
+        left_on=["estacion_id", "hora"],
+        right_on=[col_destino, "hora_fin"],
+        how="left",
+    ).drop(columns=[col_destino, "hora_fin"], errors="ignore")
+
+    malla["salidas"] = malla["salidas"].fillna(0).astype(int)
+    malla["llegadas"] = malla["llegadas"].fillna(0).astype(int)
+
+    # Integración de capacidad y coordenadas
+    cols_estaticas = ["estacion_id", "capacidad", "latitud", "longitud"]
+    cols_existentes = [col for col in cols_estaticas if col in df_estaciones.columns]
+
+    malla = malla.merge(
+        df_estaciones[cols_existentes], on="estacion_id", how="left"
+    )
+
+    return malla
+
+
+def agregar_variables_calendario(df: pd.DataFrame) -> pd.DataFrame:
+    """Extrae variables de fecha y hora a partir de la columna 'hora'."""
+    df = df.copy()
+    df["hora_del_dia"] = df["hora"].dt.hour
+    df["dia_de_semana"] = df["hora"].dt.dayofweek
+    df["es_fin_de_semana"] = df["dia_de_semana"].isin([5, 6]).astype(int)
+    df["mes"] = df["hora"].dt.month
+    return df
+
+
+def agregar_rezagos_y_moviles(
+    df: pd.DataFrame, lags: list[int] = [1, 2, 24, 168]
+) -> pd.DataFrame:
+    """Agrega rezagos (lags) y promedios móviles agrupando por estación."""
+    df = df.copy()
+    df = df.sort_values(by=["estacion_id", "hora"]).reset_index(drop=True)
+
+    # Rezagos horarios (1h atras, 2h atras, 24h atras / mismo dia, 168h atras / misma hora semana pasada)
+    for lag in lags:
+        df[f"salidas_lag_{lag}"] = df.groupby("estacion_id")["salidas"].shift(lag)
+
+    # Promedio móvil de las últimas 3 y 24 horas
+    df["salidas_roll_mean_3h"] = df.groupby("estacion_id")["salidas"].transform(
+        lambda x: x.shift(1).rolling(window=3, min_periods=1).mean()
+    )
+    df["salidas_roll_mean_24h"] = df.groupby("estacion_id")["salidas"].transform(
+        lambda x: x.shift(1).rolling(window=24, min_periods=1).mean()
+    )
+
+    return df
+
+
+def construir_features_p1(
+    df_viajes: pd.DataFrame,
+    estaciones: str | Path | pd.DataFrame,
+    eliminar_nans: bool = True,
+) -> pd.DataFrame:
+    """Pipeline orquestador para generar las características del problema P1."""
+    malla = construir_malla(df_viajes, estaciones)
+    malla = agregar_variables_calendario(malla)
+    dataset_features = agregar_rezagos_y_moviles(malla)
+
+    if eliminar_nans:
+        dataset_features = dataset_features.dropna().reset_index(drop=True)
+
+    return dataset_features
 
 
 # P2, etiqueta de riesgo (15b, Juan Pablo)
