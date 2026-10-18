@@ -308,8 +308,8 @@ def main():
             })
 
             run.registrar_metricas({
-                "silhouette": silhouette,
-                "davies_bouldin": davies_bouldin,
+                "train_silhouette": silhouette,
+                "train_davies_bouldin": davies_bouldin,
             })
 
             run.registrar_artefacto(
