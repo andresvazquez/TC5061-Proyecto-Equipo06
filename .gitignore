@@ -4,11 +4,14 @@ data/
 #Mlflow
 mlruns/
 mlartifacts/
+mlflow.db
+reports/figures/*.png
 
 # Mac OS-specific storage files
 .DS_Store
 
 # Modelos serializados
+models/
 models/*.pkl
 models/*.joblib
 models/*.onnx
