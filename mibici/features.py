@@ -388,7 +388,6 @@ def construir_features_p1(
 
     return dataset_features
 
-
 # P2, etiqueta de riesgo (15b, Juan Pablo)
 def etiqueta_riesgo(malla):
     """
