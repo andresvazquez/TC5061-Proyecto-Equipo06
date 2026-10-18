@@ -148,7 +148,13 @@ Ejemplos:
 
 ### Pull Requests y revisiones
 
-Por completar.
+Todo cambio se integra a `main` mediante un Pull Request. El título del PR sigue la misma convención utilizada para los commits y debe describir de forma clara el cambio realizado.
+
+Antes de fusionarse, cada Pull Request requiere al menos una aprobación de otro integrante. El revisor verifica que el cambio corresponda al alcance de la tarea, respete la estructura del proyecto y no introduzca modificaciones innecesarias en componentes asignados a otros integrantes.
+
+Cuando una revisión identifica un ajuste necesario, el cambio se incorpora en la misma rama y el Pull Request se actualiza para una nueva validación. Una vez aprobado, el PR se integra mediante squash merge para conservar un solo commit representativo del cambio en `main`.
+
+Cada integrante participa tanto como autor de Pull Requests como revisor de contribuciones de otro integrante, dejando evidencia de ambas actividades en GitHub.
 
 ## Buenas prácticas
 
@@ -166,4 +172,18 @@ Por completar.
 
 ## Integrantes y roles
 
-Por completar.
+### Andrés Eduardo Vázquez Pérez
+
+Responsable del comando que integra el proceso de ingesta, el versionado de datos, las variables de P2 relacionadas con inventario y flujos recientes, el baseline de clasificación P2 y su notebook exploratorio. También participa en la protección de la rama principal y en la documentación de los comandos de ingesta y del experimento base.
+
+### Juan Pablo Castillo Mendoza
+
+Responsable de la configuración central del proyecto en `config.py`, la descarga de los datos mensuales y la nomenclatura de estaciones, la construcción de la etiqueta de riesgo de P2 y el notebook de exploración de datos. También participa en la documentación del propósito, preguntas y datos utilizados, así como en la validación final utilizando un clon limpio del repositorio.
+
+### Christian Ulises Ramírez García
+
+Responsable del almacenamiento de los datos procesados en Parquet, el feature engineering de P1, las funciones de evaluación de los modelos, el baseline de regresión P1 y su notebook exploratorio. También participa en la configuración de `.gitignore`, documentación de la estructura e instalación y buenas prácticas del repositorio.
+
+### Sergio Alejandro Canto Arizpe
+
+Responsable de la normalización de los archivos mensuales, el feature engineering del perfil de uso de estaciones para P3, el componente común de tracking con MLflow, el baseline de clustering P3 y el notebook exploratorio de P3. También participa en la documentación del flujo Git/GitHub, los roles del equipo y la captura de evidencias finales de MLflow.
