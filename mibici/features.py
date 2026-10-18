@@ -272,6 +272,99 @@ def construir_malla(viajes, estaciones):
 def etiqueta_riesgo(malla):
     """
     Agrega a la malla el inventario estimado y el riesgo.
-    Recibe la malla, devuelve una copia con inventario_estimado (al final de cada hora) y riesgo (0 o 1).
+
+    Recibe la malla y devuelve una copia con:
+    - inventario_estimado: bicicletas estimadas al final de cada hora.
+    - riesgo: 1 si la estacion estara casi vacia o casi llena
+      al finalizar la siguiente hora; 0 en caso contrario.
+
+    Supuestos:
+    - Inventario inicial: 50% de la capacidad.
+    - Umbral de riesgo: ocupacion <= 10% o >= 90%.
+    - Horizonte de prediccion: 1 hora.
     """
-    raise NotImplementedError("Pendiente por trabajar")
+
+    resultado = malla.copy()
+
+    # Validar columnas necesarias
+    columnas = {
+        "estacion_id", "hora", "salidas",
+        "llegadas", "capacidad"
+    }
+
+    faltantes = columnas - set(resultado.columns)
+    if faltantes:
+        raise ValueError(f"Faltan columnas: {faltantes}")
+
+    # Ordenar por estacion y hora
+    resultado["hora"] = pd.to_datetime(resultado["hora"])
+    resultado = resultado.sort_values(
+        ["estacion_id", "hora"]
+    )
+
+    # Validar informacion
+    if (
+        resultado["capacidad"].isna().any()
+        or (resultado["capacidad"] <= 0).any()
+    ):
+        raise ValueError("Hay capacidades faltantes o invalidas")
+
+    if resultado[["salidas", "llegadas"]].isna().any().any():
+        raise ValueError("Hay movimientos faltantes")
+
+    if resultado.duplicated(["estacion_id", "hora"]).any():
+        raise ValueError("Hay estaciones-hora duplicadas")
+
+    # Estimar inventario al final de cada hora
+    inventarios = pd.Series(index=resultado.index, dtype=float)
+
+    for _, grupo in resultado.groupby("estacion_id"):
+
+        inventario = grupo["capacidad"].iloc[0] * 0.50
+
+        for indice, fila in grupo.iterrows():
+
+            inventario += fila["llegadas"] - fila["salidas"]
+
+            inventario = np.clip(
+                inventario, 0, fila["capacidad"]
+            )
+
+            inventarios.loc[indice] = inventario
+
+    resultado["inventario_estimado"] = inventarios
+
+    # Calcular ocupacion estimada
+    ocupacion = (
+        resultado["inventario_estimado"]
+        / resultado["capacidad"]
+    )
+
+    # Identificar estados criticos
+    resultado["critico"] = (
+        (ocupacion <= 0.10)
+        | (ocupacion >= 0.90)
+    ).astype(int)
+
+    # Target: riesgo en la siguiente hora
+    resultado["riesgo"] = (
+        resultado.groupby("estacion_id")["critico"]
+        .shift(-1)
+        .astype("Int64")
+    )
+
+    # Verificar que la siguiente fila sea exactamente una hora despues
+    siguiente_hora = (
+        resultado.groupby("estacion_id")["hora"].shift(-1)
+    )
+
+    diferencia = siguiente_hora - resultado["hora"]
+
+    resultado.loc[
+        diferencia != pd.Timedelta(hours=1), "riesgo"
+    ] = pd.NA
+
+    # Eliminar columna auxiliar
+    resultado = resultado.drop(columns=["critico"])
+
+    return resultado
