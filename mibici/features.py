@@ -257,3 +257,21 @@ def perfil_uso_estacion(viajes, estaciones):
     )
 
     return perfil
+
+
+# P1 y base, malla estacion por hora (15a, Christian)
+def construir_malla(viajes, estaciones):
+    """
+    Arma la malla de una fila por estacion y hora (todas las horas, con ceros si no hubo viajes).
+    Recibe viajes y estaciones, devuelve estacion_id, hora (fecha y hora), salidas, llegadas y capacidad.
+    """
+    raise NotImplementedError("Pendiente por trabajar")
+
+
+# P2, etiqueta de riesgo (15b, Juan Pablo)
+def etiqueta_riesgo(malla):
+    """
+    Agrega a la malla el inventario estimado y el riesgo.
+    Recibe la malla, devuelve una copia con inventario_estimado (al final de cada hora) y riesgo (0 o 1).
+    """
+    raise NotImplementedError("Pendiente por trabajar")
