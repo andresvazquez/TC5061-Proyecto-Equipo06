@@ -38,14 +38,24 @@ def evaluar_conjuntos(
 
 
 def guardar_grafica_predicciones(
-    y_real: pd.Series, y_pred: pd.Series, titulo: str, nombre_archivo: str
+    y_real: pd.Series, y_pred: pd.Series, titulo: str, nombre_archivo: str, n_muestras: int = 1000
 ) -> str:
-    """Genera y guarda una gráfica de Dispersión y Residuos bien escalada como artefacto."""
+    """Genera y guarda una gráfica de Dispersión y Residuos representativa mediante un muestreo aleatorio."""
     temp_dir = tempfile.mkdtemp()
     ruta_imagen = os.path.join(temp_dir, nombre_archivo)
 
-    y_real_sub = np.array(y_real[:1000])
-    y_pred_sub = np.array(y_pred[:1000])
+    # Convertir a Series de pandas si vienen como arrays para usar sample
+    if not isinstance(y_real, pd.Series):
+        y_real = pd.Series(y_real)
+    if not isinstance(y_pred, pd.Series):
+        y_pred = pd.Series(y_pred, index=y_real.index)
+
+    # Muestreo aleatorio con semilla fija para representatividad y reproducibilidad
+    tamano_muestra = min(len(y_real), n_muestras)
+    indices_muestra = y_real.sample(n=tamano_muestra, random_state=42).index
+
+    y_real_sub = y_real.loc[indices_muestra].to_numpy()
+    y_pred_sub = y_pred.loc[indices_muestra].to_numpy()
 
     fig, ax = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -61,7 +71,7 @@ def guardar_grafica_predicciones(
     ax[0].legend()
     ax[0].grid(True, linestyle="--", alpha=0.5)
 
-    # 2. Residuos
+    # 2. Residuos (sobre la totalidad de los datos para no perder eventos extremos)
     residuos = y_real - y_pred
     ax[1].hist(residuos, bins=50, range=(-15, 15), color="coral", edgecolor="black", alpha=0.7)
     ax[1].set_xlabel("Residuo (Real - Predicho)")
