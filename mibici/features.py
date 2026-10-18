@@ -273,20 +273,18 @@ def etiqueta_riesgo(malla):
     """
     Agrega a la malla el inventario estimado y el riesgo.
 
-    Recibe la malla y devuelve una copia con:
-    - inventario_estimado: bicicletas estimadas al final de cada hora.
-    - riesgo: 1 si la estacion estara casi vacia o casi llena
-      al finalizar la siguiente hora; 0 en caso contrario.
+    - Inventario inicial: 50% de la capacidad cada dia.
+    - Actualizacion horaria: llegadas menos salidas.
+    - Riesgo: ocupacion <=10% o >=90%.
+    - Horizonte: siguiente hora (t+1).
+    - No se etiqueta la transicion entre dias.
 
-    Supuestos:
-    - Inventario inicial: 50% de la capacidad.
-    - Umbral de riesgo: ocupacion <= 10% o >= 90%.
-    - Horizonte de prediccion: 1 hora.
+    Devuelve una copia con inventario_estimado y riesgo.
     """
 
     resultado = malla.copy()
 
-    # Validar columnas necesarias
+    # Validar columnas
     columnas = {
         "estacion_id", "hora", "salidas",
         "llegadas", "capacidad"
@@ -296,75 +294,93 @@ def etiqueta_riesgo(malla):
     if faltantes:
         raise ValueError(f"Faltan columnas: {faltantes}")
 
-    # Ordenar por estacion y hora
     resultado["hora"] = pd.to_datetime(resultado["hora"])
-    resultado = resultado.sort_values(
-        ["estacion_id", "hora"]
-    )
 
-    # Validar informacion
-    if (
-        resultado["capacidad"].isna().any()
-        or (resultado["capacidad"] <= 0).any()
-    ):
-        raise ValueError("Hay capacidades faltantes o invalidas")
+    if resultado[list(columnas)].isna().any().any():
+        raise ValueError("Hay valores faltantes en la malla")
 
-    if resultado[["salidas", "llegadas"]].isna().any().any():
-        raise ValueError("Hay movimientos faltantes")
+    if (resultado["capacidad"] <= 0).any():
+        raise ValueError("Hay capacidades invalidas")
+
+    if (resultado[["salidas", "llegadas"]] < 0).any().any():
+        raise ValueError("Hay movimientos negativos")
 
     if resultado.duplicated(["estacion_id", "hora"]).any():
         raise ValueError("Hay estaciones-hora duplicadas")
 
-    # Estimar inventario al final de cada hora
-    inventarios = pd.Series(index=resultado.index, dtype=float)
+    # Ordenar cronologicamente
+    resultado = resultado.sort_values(
+        ["estacion_id", "hora"]
+    ).reset_index(drop=True)
 
-    for _, grupo in resultado.groupby("estacion_id"):
+    resultado["fecha"] = resultado["hora"].dt.normalize()
 
-        inventario = grupo["capacidad"].iloc[0] * 0.50
+    # Arreglos NumPy para mejorar el rendimiento
+    salidas = resultado["salidas"].to_numpy(dtype=float)
+    llegadas = resultado["llegadas"].to_numpy(dtype=float)
+    capacidades = resultado["capacidad"].to_numpy(dtype=float)
 
-        for indice, fila in grupo.iterrows():
+    inventarios = np.empty(len(resultado), dtype=float)
 
-            inventario += fila["llegadas"] - fila["salidas"]
+    # Calcular inventario independientemente por estacion y dia
+    grupos = resultado.groupby(
+        ["estacion_id", "fecha"],
+        sort=False
+    ).indices
+
+    for indices in grupos.values():
+
+        capacidad = capacidades[indices[0]]
+        inventario = capacidad * 0.50
+
+        for i in indices:
+
+            inventario += llegadas[i] - salidas[i]
 
             inventario = np.clip(
-                inventario, 0, fila["capacidad"]
+                inventario, 0, capacidades[i]
             )
 
-            inventarios.loc[indice] = inventario
+            inventarios[i] = inventario
 
     resultado["inventario_estimado"] = inventarios
 
-    # Calcular ocupacion estimada
-    ocupacion = (
-        resultado["inventario_estimado"]
-        / resultado["capacidad"]
-    )
+    # Identificar ocupacion critica
+    ocupacion = inventarios / capacidades
 
-    # Identificar estados criticos
-    resultado["critico"] = (
-        (ocupacion <= 0.10)
-        | (ocupacion >= 0.90)
+    critico = (
+        (ocupacion <= 0.10) |
+        (ocupacion >= 0.90)
     ).astype(int)
 
-    # Target: riesgo en la siguiente hora
+    resultado["critico"] = critico
+
+    # Target de la siguiente hora
     resultado["riesgo"] = (
         resultado.groupby("estacion_id")["critico"]
         .shift(-1)
         .astype("Int64")
     )
 
-    # Verificar que la siguiente fila sea exactamente una hora despues
+    # Validar que la siguiente observacion sea una hora despues
     siguiente_hora = (
-        resultado.groupby("estacion_id")["hora"].shift(-1)
+        resultado.groupby("estacion_id")["hora"]
+        .shift(-1)
     )
 
-    diferencia = siguiente_hora - resultado["hora"]
+    misma_fecha = (
+        siguiente_hora.dt.normalize() == resultado["fecha"]
+    )
 
+    hora_consecutiva = (
+        siguiente_hora - resultado["hora"]
+        == pd.Timedelta(hours=1)
+    )
+
+    # No etiquetar horas faltantes ni cruces de dia
     resultado.loc[
-        diferencia != pd.Timedelta(hours=1), "riesgo"
+        ~(misma_fecha & hora_consecutiva),
+        "riesgo"
     ] = pd.NA
 
-    # Eliminar columna auxiliar
-    resultado = resultado.drop(columns=["critico"])
-
-    return resultado
+    return resultado.drop(columns=["fecha", "critico"])
