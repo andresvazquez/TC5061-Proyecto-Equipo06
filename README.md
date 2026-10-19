@@ -217,7 +217,7 @@ En el proyecto se aplicaron las siguientes buenas prácticas de ingeniería y ML
 
 ### MLflow Tracking
 - **Seguimiento centralizado:** Se utiliza una clase común `RunMLflow` (`mibici/tracking.py`) que estandariza la creación de experimentos, registro de hiperparámetros, métricas de desempeño y guardado de artefactos.
-- **Trazabilidad y artefactos:** Cada corrida registra parámetros del modelo, métricas de validación y prueba, artefactos visuales (gráficas de dispersión/residuos) y la serialización del modelo dentro del servidor local de MLflow (`mlflow.db`).
+- **Trazabilidad y artefactos:** Cada corrida registra parámetros del modelo, métricas de validación y prueba, artefactos visuales y la serialización del modelo dentro del servidor local de MLflow (`mlflow.db`).
 
 ### Estructura y código
 - **Arquitectura modular:** El código fuente se organiza como un paquete ejecutable (`mibici/`) instalado en modo editable (`pip install -e .`), permitiendo importaciones limpias entre módulos.
