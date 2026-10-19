@@ -89,8 +89,47 @@ TC5061-Proyecto-Equipo06/
 
 ## Instalación
 
-Por completar.
+Para configurar el entorno de desarrollo y ejecutar los componentes del proyecto desde un clon limpio del repositorio, sigue estos pasos:
 
+### Pre-requisitos
+- **Python 3.10** o superior instalado en el sistema.
+- **Git** instalado.
+
+---
+
+### 1. Clonar el repositorio
+
+Clona el repositorio en tu máquina local y posicionate dentro de la carpeta del proyecto:
+
+```bash
+git clone [https://github.com/andresvazquez/TC5061-Proyecto-Equipo06.git](https://github.com/andresvazquez/TC5061-Proyecto-Equipo06.git)
+cd TC5061-Proyecto-Equipo06
+```
+Crea un entorno virtual
+En windows
+```bash
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+En Linux/MacOS
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+Para instalar dependencias y el paquete local
+```bash
+pip install --upgrade pip
+pip install -e .
+```
+O si tienes Make
+```bash
+make requirements
+```
+Y para verificar la instalación:
+```bash
+python -c "import mibici; print(mibici.__name__)"
+```
 ## Comandos
 
 ### Ingesta de datos
