@@ -7,6 +7,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 from mibici import config
 from mibici.dataset import calcular_hash
 from mibici.features import construir_malla, etiqueta_riesgo, features_p2
+from mibici.modeling.tracking import obtener_git_commit
 from mibici.plots import graficar_curva_pr
 
 # P2: baseline y modelo candidato registrados en MLflow
@@ -97,6 +98,7 @@ def correr_run(nombre, modelo, params, datos, version_datos):
         mlflow.log_metrics(metricas)
         mlflow.set_tag("equipo", "06")
         mlflow.set_tag("pregunta", "P2")
+        mlflow.set_tag("git_commit", obtener_git_commit())
         mlflow.log_artifact(figura_val)
         mlflow.log_artifact(figura_test)
         print(nombre, metricas)
