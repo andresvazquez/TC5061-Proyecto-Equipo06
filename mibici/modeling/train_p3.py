@@ -127,7 +127,7 @@ def cargar_estaciones():
         pd.DataFrame: Catalogo de estaciones de MiBici.
     """
     ruta = (
-        Path(config.PROCESSED_DATA_DIR)
+        Path(config.RAW_DATA_DIR)
         / "nomenclatura_2026_09.csv"
     )
 
