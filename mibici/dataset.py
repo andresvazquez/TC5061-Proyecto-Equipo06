@@ -418,65 +418,6 @@ def generar_manifiesto(rutas_csv, urls, registros):
     # La versión de los datos es el hash del propio manifiesto
     return calcular_hash(config.MANIFEST_PATH)
 
-def normalizar_estaciones(ruta_csv, ruta_destino=None):
-    """
-    Normaliza el catálogo de estaciones de MiBici.
-    """
-    ruta_csv = Path(ruta_csv)
-
-    # 1. Verificar que el archivo exista
-    if not ruta_csv.exists():
-        raise FileNotFoundError(
-            f"No se encontro el archivo: {ruta_csv}"
-        )
-
-    # 2. Intentar primero UTF-8 y usar ISO-8859-1 como respaldo
-    try:
-        tabla = pd.read_csv(
-            ruta_csv,
-            encoding="utf-8"
-        )
-    except UnicodeDecodeError:
-        tabla = pd.read_csv(
-            ruta_csv,
-            encoding="iso-8859-1"
-        )
-
-    # 3. Normalizar nombres de columnas
-    tabla.columns = (
-        tabla.columns
-        .str.strip()
-        .str.lower()
-        .str.replace(" ", "_", regex=False)
-        .str.replace("á", "a", regex=False)
-        .str.replace("é", "e", regex=False)
-        .str.replace("í", "i", regex=False)
-        .str.replace("ó", "o", regex=False)
-        .str.replace("ú", "u", regex=False)
-        .str.replace("ñ", "n", regex=False)
-    )
-
-    mapeo_columnas = {
-        "id": "origen_id",
-        "name": "nombre",
-        "latitude": "latitud",
-        "longitude": "longitud",
-        "dpcapacity": "capacidad",
-    }
-    tabla = tabla.rename(columns=mapeo_columnas)
-
-    # 6. Definir la ruta de salida y guardar el CSV normalizado
-    if ruta_destino is None:
-        ruta_destino = ruta_csv.parent / f"{ruta_csv.stem}_clean.csv"
-    else:
-        ruta_destino = Path(ruta_destino)
-
-    ruta_destino.parent.mkdir(parents=True, exist_ok=True)
-    tabla.to_csv(ruta_destino, index=False, encoding="utf-8")
-    print(f"Estaciones normalizadas guardadas en: {ruta_destino}")
-
-    return tabla
-
 # Proceso ejecutable desde la terminal: python mibici/dataset.py
 def main():
     print("Iniciando la ingesta de MiBici")
@@ -484,7 +425,6 @@ def main():
     # El rango de meses y las rutas salen de config.py
     urls = listar_enlaces(config.FECHA_INICIO, config.FECHA_FIN)
     ruta_nomenclatura = descargar_nomenclatura(config.RAW_DATA_DIR)
-    normalizar_estaciones(ruta_nomenclatura)
 
     # Por cada mes: descargar, normalizar y guardar en Parquet
     rutas_csv = []

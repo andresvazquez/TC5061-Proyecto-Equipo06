@@ -125,9 +125,9 @@ def main():
 
     df_viajes = pd.concat([pd.read_parquet(f) for f in archivos_parquet], ignore_index=True)
 
-    nomenclatura_clean = config.PROCESSED_DATA_DIR / "nomenclatura_2026_09_clean.csv"
+    nomenclatura_clean = config.RAW_DATA_DIR / "nomenclatura_2026_09.csv"
     if not nomenclatura_clean.exists():
-        nomenclatura_clean = list(config.PROCESSED_DATA_DIR.glob("*clean*.csv"))[0]
+        nomenclatura_clean = list(config.RAW_DATA_DIR.glob("*nomenclatura*.csv"))[0]
 
     df_features = construir_features_p1(df_viajes, nomenclatura_clean)
 
