@@ -207,3 +207,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Figuras generadas por los scripts de entrenamiento
+reports/figures/*.png
