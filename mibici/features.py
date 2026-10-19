@@ -275,7 +275,7 @@ def construir_malla(
         df_estaciones = df_estaciones.rename(columns={"origen_id": "estacion_id"})
     elif "id" in df_estaciones.columns:
         df_estaciones = df_estaciones.rename(
-            columns={"id": "estacion_id", "dpcapacity": "capacidad"}
+            columns={"id": "estacion_id", "dpcapacity": "capacidad", "name": "nombre"}
         )
 
     estaciones_ids = df_estaciones["estacion_id"].unique()
