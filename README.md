@@ -8,15 +8,38 @@ Proyecto integrador MiBici: regresión, clasificación y clustering
 
 ## Propósito del proyecto
 
-Por completar.
+El propósito de este proyecto es desarrollar una solución basada en técnicas de Machine Learning para analizar los patrones de uso del sistema de bicicletas públicas MiBici, ubicado en el Área Metropolitana de Guadalajara, con el objetivo de generar información que apoye la toma de decisiones relacionadas con la operación, distribución de bicicletas y planeación del servicio.
 
-## Las tres preguntas
+A partir del análisis de datos históricos de viajes y de la información de las estaciones, se busca estimar la demanda futura de bicicletas, identificar posibles problemas de disponibilidad y reconocer estaciones que presentan comportamientos de uso similares. Esto permitirá explorar oportunidades para mejorar la asignación de bicicletas, anticipar situaciones que afecten la disponibilidad del servicio y apoyar la planeación de futuras ampliaciones del sistema.
 
-Por completar.
+Adicionalmente, el proyecto busca aplicar buenas prácticas de MLOps mediante la construcción de un flujo de trabajo reproducible que incluya la ingesta y preparación de datos, la generación de variables, el entrenamiento y evaluación de modelos, así como el registro y seguimiento de experimentos utilizando MLflow.
+
+## Preguntas del proyecto
+
+El proyecto aborda tres preguntas mediante diferentes técnicas de Machine Learning:
+
+- **P1 - Regresión:** ¿Cuántos viajes se iniciarán en una estación durante la siguiente hora? Se busca anticipar la demanda para mejorar la distribución de bicicletas.
+
+- **P2 - Clasificación:** ¿Una estación estará en riesgo de quedarse sin bicicletas o sin anclajes disponibles durante la siguiente hora? Se busca identificar estaciones que requieran rebalanceo.
+
+- **P3 - Clustering:** ¿Qué estaciones presentan patrones de uso similares y dónde se ubican? Se busca agrupar estaciones para apoyar la planeación y expansión del sistema.
 
 ## Datos utilizados
 
-Por completar.
+Se utilizan datos históricos del portal de [Datos Abiertos de MiBici](https://mibici.net/es/datos-abiertos/), correspondientes al periodo de **junio de 2023 a septiembre de 2026**.
+
+La base de datos comprende:
+
+- **40 meses** de registros históricos.
+- **15,011,969 viajes** registrados.
+- **484 estaciones** en la nomenclatura, de las cuales 473 aparecen en los viajes.
+
+Se utilizan dos fuentes principales:
+
+- **Registros de viajes:** archivos CSV mensuales con fechas, horarios y estaciones de origen y destino.
+- **Nomenclatura de estaciones:** archivo `nomenclatura_2026_09.csv`, con identificadores, nombres, ubicaciones y capacidades.
+
+Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excluye la información personal de los usuarios y se utiliza un manifiesto con hashes SHA-256 para garantizar la trazabilidad y reproducibilidad de los datos.
 
 ## Estructura de carpetas
 
@@ -37,10 +60,10 @@ TC5061-Proyecto-Equipo06/
 │   ├── config.py       <- Variables globales, rutas e intervalos de fechas 
 │   ├── dataset.py      <- Ingesta, limpieza, normalización y generación del manifiesto
 │   ├── features.py     <- Creacion de funciones para entrenamiento de los 3 modelos
-│   ├── tracking.py     <- Clase RunMLflow para trazabilidad centralizada de experimentos
 │   └── modeling/       
 │       ├── __init__.py
 │       ├── predict.py  <- Código para inferencia de modelos
+│       ├── tracking.py <- Clase RunMLflow para trazabilidad centralizada de experimentos
 │       ├── train.py    <- Script base de entrenamiento (no usado)
 │       ├── train_p1.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P1)
 │       ├── train_p2.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P2)
