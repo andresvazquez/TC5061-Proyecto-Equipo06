@@ -52,7 +52,7 @@ def guardar_grafica_predicciones(
 
     # Muestreo aleatorio con semilla fija para representatividad y reproducibilidad
     tamano_muestra = min(len(y_real), n_muestras)
-    indices_muestra = y_real.sample(n=tamano_muestra, random_state=42).index
+    indices_muestra = y_real.sample(n=tamano_muestra, random_state=config.SEMILLA).index
 
     y_real_sub = y_real.loc[indices_muestra].to_numpy()
     y_pred_sub = y_pred.loc[indices_muestra].to_numpy()
@@ -187,14 +187,14 @@ def main():
         tracker.registrar_parametros(
             {
                 "modelo_tipo": "HistGradientBoostingRegressor",
-                "random_state": 42,
+                "random_state": config.SEMILLA,
                 "n_features": len(X_cols),
                 "inicio_validacion": str(config.INICIO_VALIDACION),
                 "inicio_prueba": str(config.INICIO_PRUEBA),
             }
         )
 
-        modelo = HistGradientBoostingRegressor(random_state=42)
+        modelo = HistGradientBoostingRegressor(random_state=config.SEMILLA)
         modelo.fit(X_train, y_train)
 
         # Predicciones en Val y Test
