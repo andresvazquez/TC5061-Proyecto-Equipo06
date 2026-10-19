@@ -118,7 +118,30 @@ Son más de 1 GB, así que la primera vez tarda varios minutos. Si un archivo ya
 
 ### Experimento base
 
-Por completar.
+Con los datos ya descargados (sección anterior), el entorno virtual activo y desde la raíz del proyecto, primero se levanta MLflow en otra terminal:
+
+```
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+La dirección sale de mibici/config.py (http://localhost:5000) y se puede cambiar con la variable MLFLOW_TRACKING_URI. Con MLflow arriba se corren los tres baselines, uno por pregunta, en este orden:
+
+```
+python -m mibici.modeling.train_p3
+python -m mibici.modeling.train_p1
+python -m mibici.modeling.train_p2
+```
+
+P3 tarda unos segundos, P1 alrededor de medio minuto y P2 unos minutos. No hay que hacer nada a mano ni abrir notebooks: cada script lee los datos, construye las variables con mibici/features.py, entrena y registra todo en MLflow.
+
+Al terminar, en el experimento mibici-equipo06 quedan 5 runs: Baseline_P1_Lag168 y Candidato_HistGradientBoosting (P1), p2-baseline-clase-mas-frecuente y p2-random-forest (P2) y p3-baseline-kmeans-volumen (P3). Cada uno registra:
+
+- Parámetros para reproducirlo: rango de fechas, versión de los datos, semilla, modelo e hiperparámetros.
+- Métricas con el conjunto en el nombre, como val_mae, test_recall o train_silhouette.
+- Etiquetas con el equipo, la pregunta (P1, P2 o P3) y el commit de Git con que se ejecutó.
+- Artefactos: las gráficas de P1, las curvas precision-recall de P2 y el modelo KMeans con el resumen de grupos de P3.
+
+Con la versión de datos 723b4c4628046549dce640dabba90372588f9ea49fc882fecee42a5e1afedd7a se espera, en P1, un val_mae de 0.7738 en el baseline y de 0.6348 en el candidato; en P2, un recall de validación de 0.8853 en el random forest (el baseline no detecta riesgo); y en P3, una silueta de 0.5985 y un Davies-Bouldin de 0.5064.
 
 ## Flujo de trabajo con Git
 
