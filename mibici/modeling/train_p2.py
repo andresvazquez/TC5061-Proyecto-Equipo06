@@ -35,6 +35,9 @@ def preparar_malla(viajes, estaciones):
     malla = construir_malla(viajes, estaciones)
     malla["hora"] = pd.to_datetime(malla["hora"])
 
+    # Las estaciones sin capacidad (fuera de servicio y sin viajes) no tienen inventario que estimar
+    malla = malla[malla["capacidad"] > 0]
+
     # Todas las estaciones deben traer las mismas horas, si no los rezagos salen mal
     if malla.groupby("estacion_id").size().nunique() > 1:
         raise ValueError("La malla debe traer todas las horas de cada estación")
