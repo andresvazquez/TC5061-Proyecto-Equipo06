@@ -380,16 +380,21 @@ def normalizar_mes(ruta_csv):
     return tabla
 
 def guardar_parquet(tabla: pd.DataFrame, ruta_csv: str) -> tuple[str, int]:
-    # Define la ruta de salida .parquet
-    ruta_parquet = os.path.splitext(ruta_csv)[0] + ".parquet"
+    # Extrae solo el nombre base del archivo sin extensión (ej: 'viajes_2023_01')
+    nombre_base = os.path.splitext(os.path.basename(ruta_csv))[0]
+
+    # Asegura que la carpeta processed/ exista
+    os.makedirs(config.PROCESSED_DATA_DIR, exist_ok=True)
+
+    # Construye la nueva ruta en data/processed/ con extensión .parquet
+    ruta_parquet = os.path.join(config.PROCESSED_DATA_DIR, f"{nombre_base}.parquet")
 
     # Guarda el DataFrame en formato Parquet
     tabla.to_parquet(ruta_parquet, index=False)
 
-    #Obtiene el número de filas/registros
+    # Obtiene el número de filas/registros
     num_registros = len(tabla)
 
-    #Devuelve la ruta y el número de registros según la especificación
     return ruta_parquet, num_registros
 
 # Versionar los datos con el mecanismo propuesto

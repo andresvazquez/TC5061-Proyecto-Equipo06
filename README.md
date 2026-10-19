@@ -20,53 +20,46 @@ Por completar.
 
 ## Estructura de carpetas
 
+## Estructura de carpetas
+
 ```
-├── LICENSE            <- Open-source license if one is chosen
-├── Makefile           <- Makefile with convenience commands like `make data` or `make train`
-├── README.md          <- The top-level README for developers using this project.
-├── data
-│   ├── external       <- Data from third party sources.
-│   ├── interim        <- Intermediate data that has been transformed.
-│   ├── processed      <- The final, canonical data sets for modeling.
-│   └── raw            <- The original, immutable data dump.
+TC5061-Proyecto-Equipo06/
+├── .venv/              <- Entorno virtual local (ignorado en Git)
+├── data/
+│   ├── external/       <- Datos de fuentes de terceros
+│   ├── interim/        <- Datos intermedios transformados
+│   ├── processed/      <- Datasets procesados finales para modelado (.parquet)
+│   └── raw/            <- Copias locales de viajes y nomenclatura de estaciones
 │
-├── docs               <- A default mkdocs project; see www.mkdocs.org for details
+├── docs/               <- Documentación adicional del proyecto
+├── mibici/             <- Paquete con el código fuente del proyecto
+│   ├── __init__.py
+│   ├── config.py       <- Variables globales, rutas e intervalos de fechas 
+│   ├── dataset.py      <- Ingesta, limpieza, normalización y generación del manifiesto
+│   ├── features.py     <- Creacion de funciones para entrenamiento de los 3 modelos
+│   ├── tracking.py     <- Clase RunMLflow para trazabilidad centralizada de experimentos
+│   └── modeling/       
+│       ├── __init__.py
+│       ├── predict.py  <- Código para inferencia de modelos
+│       ├── train.py    <- Script base de entrenamiento (no usado)
+│       ├── train_p1.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P1)
+│       ├── train_p2.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P2)
+│       └── train_p3.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P3)
 │
-├── models             <- Trained and serialized models, model predictions, or model summaries
+├── mlartifacts/        <- Almacenamiento local de artefactos de MLflow (modelos, gráficas)
+├── mlruns/             <- Registro local de ejecuciones y experimentos de MLflow
+├── models/             <- Modelos entrenados y serializados
+├── notebooks/          <- Notebooks de exploración inicial y validación
+├── references/         <- Manifiesto de datos (data_manifest.csv) y referencias técnicas
+├── reports/            <- Reportes generados y gráficas/artefactos de evaluación
+│   └── figures/
 │
-├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-│                         the creator's initials, and a short `-` delimited description, e.g.
-│                         `1.0-jqp-initial-data-exploration`.
-│
-├── pyproject.toml     <- Project configuration file with package metadata for 
-│                         mibici and configuration for tools like black
-│
-├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-│
-├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures        <- Generated graphics and figures to be used in reporting
-│
-├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-│                         generated with `pip freeze > requirements.txt`
-│
-├── setup.cfg          <- Configuration file for flake8
-│
-└── mibici   <- Source code for use in this project.
-    │
-    ├── __init__.py             <- Makes mibici a Python module
-    │
-    ├── config.py               <- Store useful variables and configuration
-    │
-    ├── dataset.py              <- Scripts to download or generate data
-    │
-    ├── features.py             <- Code to create features for modeling
-    │
-    ├── modeling                
-    │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models          
-    │   └── train.py            <- Code to train models
-    │
-    └── plots.py                <- Code to create visualizations
+├── .gitignore          <- Reglas para ignorar datos pesados, entornos y carpetas locales
+├── Makefile           <- Comandos automatizados para el ciclo de vida del proyecto
+├── mlflow.db           <- Base de datos local para el tracking server de MLflow
+├── pyproject.toml      <- Configuración del paquete mibici y herramientas del entorno
+├── README.md           <- Guía principal de uso y documentación
+└── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
 ```
 
 --------

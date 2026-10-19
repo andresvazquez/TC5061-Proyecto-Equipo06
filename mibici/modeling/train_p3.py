@@ -50,7 +50,7 @@ def listar_parquet_entrenamiento():
         list[Path]: Archivos mensuales del periodo de entrenamiento.
     """
     rutas = sorted(
-        Path(config.RAW_DATA_DIR).glob(
+        Path(config.PROCESSED_DATA_DIR).glob(
             "datos_abiertos_*.parquet"
         )
     )
@@ -127,7 +127,7 @@ def cargar_estaciones():
         pd.DataFrame: Catalogo de estaciones de MiBici.
     """
     ruta = (
-        Path(config.RAW_DATA_DIR)
+        Path(config.PROCESSED_DATA_DIR)
         / "nomenclatura_2026_09.csv"
     )
 
