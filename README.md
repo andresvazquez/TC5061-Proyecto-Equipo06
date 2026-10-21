@@ -148,6 +148,20 @@ Al final crea references/data_manifest.csv con la URL, el número de registros y
 
 Son más de 1 GB, así que la primera vez tarda varios minutos. Si un archivo ya está en data/raw no se vuelve a descargar.
 
+### Servidor de tracking
+
+El Model Registry necesita un almacenamiento respaldado por una base de datos, así que el tracking se hace contra un servidor local con SQLite. Cada integrante levanta el suyo en su máquina, con el entorno virtual activo y desde la raíz del proyecto, en una terminal aparte que se deja abierta:
+
+```
+mlflow server --backend-store-uri sqlite:///mlflow.db --port 5000
+```
+
+Esto crea mlflow.db en la raíz (está en .gitignore, no se sube a Git) y deja la interfaz en http://localhost:5000. Esa es la dirección que mibici/config.py toma por defecto en TRACKING_URI, así que no hay que configurar nada más. Si se necesita otra, se cambia con la variable MLFLOW_TRACKING_URI (o en el .env):
+
+```
+export MLFLOW_TRACKING_URI=http://localhost:5000
+```
+
 ### Experimento base
 
 Con los datos ya descargados (sección anterior), el entorno virtual activo y desde la raíz del proyecto, primero se levanta MLflow en otra terminal:
