@@ -6,3 +6,19 @@ entry_points:
   # Ingesta: el rango de meses y las rutas salen de config.py
   ingest:
     command: "python mibici/dataset.py"
+
+  train:
+    parameters:
+      question:
+        type: string
+      model:
+        type: string
+      n_clusters:
+        type: int
+        default: 4
+
+    command: >-
+      python -m mibici.modeling.train_dispatcher
+      --question {question}
+      --model {model}
+      --n-clusters {n_clusters}
