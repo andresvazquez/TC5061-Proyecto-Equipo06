@@ -1,3 +1,5 @@
+import argparse
+
 import mlflow
 import pandas as pd
 from sklearn.dummy import DummyClassifier
@@ -103,8 +105,40 @@ def correr_run(nombre, modelo, params, datos, version_datos):
         mlflow.log_artifact(figura_test)
         print(nombre, metricas)
 
+def parse_args():
+    """
+    Lee el modelo y los hiperparametros de P2.
+    """
+    parser = argparse.ArgumentParser(
+        description="Entrena el baseline o candidato de P2."
+    )
+
+    parser.add_argument(
+        "--model",
+        choices=["baseline", "rf", "all"],
+        default="all",
+        help="Modelo de P2 que se desea ejecutar.",
+    )
+
+    parser.add_argument(
+        "--n-estimators",
+        type=int,
+        default=50,
+        help="Numero de arboles del Random Forest.",
+    )
+
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=10,
+        help="Profundidad maxima del Random Forest.",
+    )
+
+    return parser.parse_args()
 
 def main():
+    args = parse_args()
+
     viajes, estaciones = cargar_datos()
     malla = preparar_malla(viajes, estaciones)
     entrenamiento, validacion, prueba = partir_por_fecha(malla)
@@ -120,20 +154,47 @@ def main():
     mlflow.set_experiment(config.EXPERIMENTO)
 
     # Baseline: siempre predice la clase más frecuente
-    params = {"strategy": "most_frequent"}
-    baseline = DummyClassifier(**params)
-    correr_run("p2-baseline-clase-mas-frecuente", baseline, params, datos, version_datos)
+    if args.model in ("baseline", "all"):
+        params = {
+            "strategy": "most_frequent",
+        }
+
+        baseline = DummyClassifier(
+            **params
+        )
+
+        correr_run(
+            "p2-baseline-clase-mas-frecuente",
+            baseline,
+            params,
+            datos,
+            version_datos,
+        )
 
     # Candidato: bosque aleatorio, con más peso a la clase de riesgo
-    params = {
-        "n_estimators": 50,
-        "max_depth": 10,
-        "class_weight": {0: 0.1, 1: 0.9},
-        "n_jobs": -1,
-        "random_state": config.SEMILLA,
-    }
-    candidato = RandomForestClassifier(**params)
-    correr_run("p2-random-forest", candidato, params, datos, version_datos)
+    if args.model in ("rf", "all"):
+        params = {
+            "n_estimators": args.n_estimators,
+            "max_depth": args.max_depth,
+            "class_weight": {
+                0: 0.1,
+                1: 0.9,
+            },
+            "n_jobs": -1,
+            "random_state": config.SEMILLA,
+        }
+
+        candidato = RandomForestClassifier(
+            **params
+        )
+
+        correr_run(
+            "p2-random-forest",
+            candidato,
+            params,
+            datos,
+            version_datos,
+        )
 
 
 if __name__ == "__main__":

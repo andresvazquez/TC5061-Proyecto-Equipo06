@@ -44,6 +44,34 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--n-estimators",
+        type=int,
+        default=50,
+        help="Numero de arboles para P2 Random Forest.",
+    )
+
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=10,
+        help="Profundidad maxima para P2 Random Forest.",
+    )
+
+    parser.add_argument(
+        "--max-iter",
+        type=int,
+        default=100,
+        help="Numero maximo de iteraciones para P1 HGB.",
+    )
+
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.1,
+        help="Tasa de aprendizaje para P1 HGB.",
+    )
+
+    parser.add_argument(
         "--n-clusters",
         type=int,
         default=4,
@@ -65,7 +93,6 @@ def validar_modelo(question, model):
             f"Opciones: {sorted(modelos)}"
         )
 
-
 def construir_comando(args):
     """
     Construye el comando del trainer correspondiente.
@@ -83,6 +110,12 @@ def construir_comando(args):
             sys.executable,
             "-m",
             "mibici.modeling.train_p1",
+            "--model",
+            args.model,
+            "--max-iter",
+            str(args.max_iter),
+            "--learning-rate",
+            str(args.learning_rate),
         ]
 
     if args.question == "p2":
@@ -90,6 +123,12 @@ def construir_comando(args):
             sys.executable,
             "-m",
             "mibici.modeling.train_p2",
+            "--model",
+            args.model,
+            "--n-estimators",
+            str(args.n_estimators),
+            "--max-depth",
+            str(args.max_depth),
         ]
 
     return [
