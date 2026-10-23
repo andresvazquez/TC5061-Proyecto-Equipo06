@@ -1,5 +1,7 @@
+import argparse
 import os
 import tempfile
+
 import matplotlib.pyplot as plt
 import mlflow.sklearn
 import numpy as np
@@ -104,8 +106,40 @@ def dividir_train_val_test(
     print(f"Corte Train -> Val: {inicio_val} | Corte Val -> Test: {inicio_test}")
     return train, val, test
 
+def parse_args():
+    """
+    Lee el modelo y los hiperparametros de P1.
+    """
+    parser = argparse.ArgumentParser(
+        description="Entrena el baseline o candidato de P1."
+    )
+
+    parser.add_argument(
+        "--model",
+        choices=["baseline", "hgb", "all"],
+        default="all",
+        help="Modelo de P1 que se desea ejecutar.",
+    )
+
+    parser.add_argument(
+        "--max-iter",
+        type=int,
+        default=100,
+        help="Numero maximo de iteraciones del HistGradientBoosting.",
+    )
+
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.1,
+        help="Tasa de aprendizaje del HistGradientBoosting.",
+    )
+
+    return parser.parse_args()
 
 def main():
+    args = parse_args()
+
     print("Iniciando el entrenamiento y evaluación para el problema P1...")
 
     # 1. Obtener versión de datos
@@ -158,72 +192,80 @@ def main():
     y_test = test["salidas"]
 
     # RUN 1: BASELINE (Demanda de la semana pasada)
-    with RunMLflow(pregunta="P1", nombre_run="Baseline_P1_Lag168", version_datos=version_datos) as tracker:
-        tracker.registrar_parametros({"modelo_tipo": "Baseline_Lag_168"})
+    if args.model in ("baseline", "all"):
+        with RunMLflow(pregunta="P1", nombre_run="Baseline_P1_Lag168", version_datos=version_datos) as tracker:
+            tracker.registrar_parametros({"modelo_tipo": "Baseline_Lag_168"})
 
-        # Predicciones
-        y_val_pred_base = val["salidas_lag_168"]
-        y_test_pred_base = test["salidas_lag_168"]
+            # Predicciones
+            y_val_pred_base = val["salidas_lag_168"]
+            y_test_pred_base = test["salidas_lag_168"]
 
-        # Métricas agrupadas según la rúbrica
-        metricas_baseline = evaluar_conjuntos(
-            y_val_real=y_val,
-            y_val_pred=y_val_pred_base,
-            y_test_real=y_test,
-            y_test_pred=y_test_pred_base,
-        )
-        tracker.registrar_metricas(metricas_baseline)
+            # Métricas agrupadas según la rúbrica
+            metricas_baseline = evaluar_conjuntos(
+                y_val_real=y_val,
+                y_val_pred=y_val_pred_base,
+                y_test_real=y_test,
+                y_test_pred=y_test_pred_base,
+            )
+            tracker.registrar_metricas(metricas_baseline)
 
-        # Artefacto gráfico
-        img_baseline = guardar_grafica_predicciones(
-            y_test, y_test_pred_base, "Baseline", "grafica_baseline.png"
-        )
-        tracker.registrar_artefacto(img_baseline)
+            # Artefacto gráfico
+            img_baseline = guardar_grafica_predicciones(
+                y_test, y_test_pred_base, "Baseline", "grafica_baseline.png"
+            )
+            tracker.registrar_artefacto(img_baseline)
 
-        print("[Baseline] Métricas registradas:", metricas_baseline)
+            print("[Baseline] Métricas registradas:", metricas_baseline)
 
     # RUN 2: MODELO CANDIDATO (HistGradientBoosting)
-    with RunMLflow(pregunta="P1", nombre_run="Candidato_HistGradientBoosting", version_datos=version_datos) as tracker:
-        tracker.registrar_parametros(
-            {
-                "modelo_tipo": "HistGradientBoostingRegressor",
-                "random_state": config.SEMILLA,
-                "n_features": len(X_cols),
-                "inicio_validacion": str(config.INICIO_VALIDACION),
-                "inicio_prueba": str(config.INICIO_PRUEBA),
-            }
-        )
+    if args.model in ("hgb", "all"):
+        with RunMLflow(pregunta="P1", nombre_run="Candidato_HistGradientBoosting", version_datos=version_datos) as tracker:
+            tracker.registrar_parametros(
+                {
+                    "modelo_tipo": "HistGradientBoostingRegressor",
+                    "random_state": config.SEMILLA,
+                    "n_features": len(X_cols),
+                    "inicio_validacion": str(config.INICIO_VALIDACION),
+                    "inicio_prueba": str(config.INICIO_PRUEBA),
+                    "max_iter": args.max_iter,
+                    "learning_rate": args.learning_rate,
+                }
+            )
 
-        modelo = HistGradientBoostingRegressor(random_state=config.SEMILLA)
-        modelo.fit(X_train, y_train)
+            modelo = HistGradientBoostingRegressor(
+                max_iter=args.max_iter,
+                learning_rate=args.learning_rate,
+                random_state=config.SEMILLA,
+            )
+            modelo.fit(X_train, y_train)
 
-        # Predicciones en Val y Test
-        y_val_pred_cand = modelo.predict(X_val)
-        y_test_pred_cand = modelo.predict(X_test)
+            # Predicciones en Val y Test
+            y_val_pred_cand = modelo.predict(X_val)
+            y_test_pred_cand = modelo.predict(X_test)
 
-        # Métricas agrupadas según la rúbrica
-        metricas_candidato = evaluar_conjuntos(
-            y_val_real=y_val,
-            y_val_pred=y_val_pred_cand,
-            y_test_real=y_test,
-            y_test_pred=y_test_pred_cand,
-        )
-        tracker.registrar_metricas(metricas_candidato)
+            # Métricas agrupadas según la rúbrica
+            metricas_candidato = evaluar_conjuntos(
+                y_val_real=y_val,
+                y_val_pred=y_val_pred_cand,
+                y_test_real=y_test,
+                y_test_pred=y_test_pred_cand,
+            )
+            tracker.registrar_metricas(metricas_candidato)
 
-        # Artefacto gráfico
-        img_candidato = guardar_grafica_predicciones(
-            y_test, y_test_pred_cand, "HistGradientBoosting", "grafica_candidato.png"
-        )
-        tracker.registrar_artefacto(img_candidato)
+            # Artefacto gráfico
+            img_candidato = guardar_grafica_predicciones(
+                y_test, y_test_pred_cand, "HistGradientBoosting", "grafica_candidato.png"
+            )
+            tracker.registrar_artefacto(img_candidato)
 
-        # Modelo serializado
-        mlflow.sklearn.log_model(
-            sk_model=modelo,
-            name="modelo_hist_gb",
-            skops_trusted_types=["sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor"],
-        )
+            # Modelo serializado
+            mlflow.sklearn.log_model(
+                sk_model=modelo,
+                name="modelo_hist_gb",
+                skops_trusted_types=["sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor"],
+            )
 
-        print("[Candidato] Métricas registradas:", metricas_candidato)
+            print("[Candidato] Métricas registradas:", metricas_candidato)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,18 @@ entry_points:
         type: string
       model:
         type: string
+      n_estimators:
+        type: int
+        default: 50
+      max_depth:
+        type: int
+        default: 10
+      max_iter:
+        type: int
+        default: 100
+      learning_rate:
+        type: float
+        default: 0.1
       n_clusters:
         type: int
         default: 4
@@ -21,4 +33,8 @@ entry_points:
       python -m mibici.modeling.train_dispatcher
       --question {question}
       --model {model}
+      --n-estimators {n_estimators}
+      --max-depth {max_depth}
+      --max-iter {max_iter}
+      --learning-rate {learning_rate}
       --n-clusters {n_clusters}
