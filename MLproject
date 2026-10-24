@@ -5,8 +5,7 @@ python_env: python_env.yaml
 entry_points:
   # Ingesta: el rango de meses y las rutas salen de config.py
   ingest:
-    command: "python mibici/dataset.py"
-
+    command: "python -m mibici/dataset.py"
   train:
     parameters:
       question:
