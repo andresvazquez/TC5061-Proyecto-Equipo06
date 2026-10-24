@@ -55,7 +55,8 @@ class RunMLflow:
         version_datos,
         fecha_inicio=None,
         fecha_fin=None,
-    ):
+        nested=False,
+        ):
         self.pregunta = pregunta
         self.nombre_run = nombre_run
         self.version_datos = version_datos
@@ -82,7 +83,8 @@ class RunMLflow:
         configurar_mlflow()
 
         self.run = mlflow.start_run(
-            run_name=self.nombre_run
+        run_name=self.nombre_run,
+        nested=self.nested,  # NUEVO
         )
 
         mlflow.log_params({
