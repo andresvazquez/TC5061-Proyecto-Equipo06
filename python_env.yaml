@@ -1,2 +1,25 @@
-# Pendiente (3a). Ojo que ingest corre mibici/dataset.py y este hace from mibici import config,
-# así que el entorno tiene que dejar mibici importable (creo que si no, truena con ModuleNotFoundError).
+# Entorno reproducible del proyecto MiBici - Equipo 06
+# Version de Python coherente con pyproject.toml (>=3.13) y Makefile.
+python: "3.13.0"
+
+build_dependencies:
+  - pip==26.2.1
+
+dependencies:
+  - ipython==9.17.1
+  - jupyterlab==4.6.4
+  - loguru==0.7.3
+  - mlflow==3.17.1
+  - matplotlib==3.11.2
+  - notebook==7.6.3
+  - numpy==2.5.4
+  - pandas==2.3.3
+  - pyarrow==25.0.1
+  - python-dotenv==1.2.4
+  - ruff==0.17.0
+  - scikit-learn==1.9.1
+  - tqdm==4.70.1
+  - typer==0.27.3
+  - requests==2.32.3
+  - beautifulsoup4==4.13.4
+  - seaborn==0.13.2
