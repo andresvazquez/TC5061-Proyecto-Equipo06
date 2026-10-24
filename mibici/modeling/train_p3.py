@@ -50,7 +50,7 @@ def listar_parquet_entrenamiento():
         list[Path]: Archivos mensuales del periodo de entrenamiento.
     """
     rutas = sorted(
-        Path(config.RAW_DATA_DIR).glob(
+        Path(config.PROCESSED_DATA_DIR).glob(
             "datos_abiertos_*.parquet"
         )
     )

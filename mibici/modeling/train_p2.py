@@ -24,7 +24,7 @@ VARIABLES = [
 
 def cargar_datos():
     # Junta los viajes en Parquet y lee el catálogo de estaciones
-    archivos = sorted(config.RAW_DATA_DIR.glob("datos_abiertos_*.parquet"))
+    archivos = sorted(config.PROCESSED_DATA_DIR.glob("datos_abiertos_*.parquet"))
     viajes = pd.concat([pd.read_parquet(archivo) for archivo in archivos])
     estaciones = pd.read_csv(config.RAW_DATA_DIR / "nomenclatura_2026_09.csv")
     return viajes, estaciones

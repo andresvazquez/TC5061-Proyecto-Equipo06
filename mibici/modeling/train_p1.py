@@ -115,19 +115,19 @@ def main():
         version_datos = "v1.0-raw"
 
     # 2. Cargar datos
-    archivos_parquet = list(config.RAW_DATA_DIR.glob("datos_abiertos_*.parquet"))
+    archivos_parquet = list(config.PROCESSED_DATA_DIR.glob("datos_abiertos_*.parquet"))
 
     if not archivos_parquet:
         raise FileNotFoundError(
-            f"No se encontraron archivos .parquet en {config.RAW_DATA_DIR}. "
+            f"No se encontraron archivos .parquet en {config.PROCESSED_DATA_DIR}. "
             "Asegúrate de haber ejecutado 'python -m mibici.dataset' primero."
         )
 
     df_viajes = pd.concat([pd.read_parquet(f) for f in archivos_parquet], ignore_index=True)
 
-    nomenclatura_clean = config.RAW_DATA_DIR / "nomenclatura_2026_09_clean.csv"
+    nomenclatura_clean = config.RAW_DATA_DIR / "nomenclatura_2026_09.csv"
     if not nomenclatura_clean.exists():
-        nomenclatura_clean = list(config.RAW_DATA_DIR.glob("*clean*.csv"))[0]
+        nomenclatura_clean = list(config.RAW_DATA_DIR.glob("*nomenclatura*.csv"))[0]
 
     df_features = construir_features_p1(df_viajes, nomenclatura_clean)
 

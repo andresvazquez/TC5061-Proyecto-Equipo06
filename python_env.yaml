@@ -1,0 +1,2 @@
+# Pendiente (3a). Ojo que ingest corre mibici/dataset.py y este hace from mibici import config,
+# así que el entorno tiene que dejar mibici importable (creo que si no, truena con ModuleNotFoundError).
