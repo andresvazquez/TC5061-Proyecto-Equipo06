@@ -60,6 +60,7 @@ class RunMLflow:
         self.pregunta = pregunta
         self.nombre_run = nombre_run
         self.version_datos = version_datos
+        self.nested = nested
 
         self.fecha_inicio = (
             fecha_inicio
