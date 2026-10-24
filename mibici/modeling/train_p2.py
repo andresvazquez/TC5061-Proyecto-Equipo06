@@ -8,7 +8,7 @@ from mibici import config
 from mibici.dataset import calcular_hash
 from mibici.features import construir_malla, etiqueta_riesgo, features_p2
 from mibici.modeling.tracking import obtener_git_commit
-from mibici.plots import graficar_curva_pr
+from mibici.plots import graficar_curva_pr, graficar_matriz_confusion
 
 # P2: baseline y modelo candidato registrados en MLflow
 
@@ -59,17 +59,19 @@ def partir_por_fecha(malla):
 
 
 def evaluar(modelo, X, y, nombre, prefijo):
-    # Métricas del conjunto (val o test) y su curva precision-recall
+    # Métricas del conjunto (val o test), su curva precision-recall y su matriz de confusión
     yhat = modelo.predict(X)
-    ruta_figura = config.FIGURES_DIR / f"{nombre}_{prefijo}_pr.png"
+    ruta_pr = config.FIGURES_DIR / f"{nombre}_{prefijo}_pr.png"
+    ruta_matriz = config.FIGURES_DIR / f"{nombre}_{prefijo}_cm.png"
 
     metricas = {
         f"{prefijo}_precision": precision_score(y, yhat),
         f"{prefijo}_recall": recall_score(y, yhat),
         f"{prefijo}_f1": f1_score(y, yhat),
-        f"{prefijo}_pr_auc": graficar_curva_pr(modelo, X, y, nombre, ruta_figura),
+        f"{prefijo}_pr_auc": graficar_curva_pr(modelo, X, y, nombre, ruta_pr),
     }
-    return metricas, ruta_figura
+    graficar_matriz_confusion(modelo, X, y, ruta_matriz)
+    return metricas, [ruta_pr, ruta_matriz]
 
 
 def correr_run(nombre, modelo, params, datos, version_datos):
@@ -79,8 +81,8 @@ def correr_run(nombre, modelo, params, datos, version_datos):
     with mlflow.start_run(run_name=nombre):
         modelo.fit(X_train, y_train)
 
-        metricas, figura_val = evaluar(modelo, X_val, y_val, nombre, "val")
-        metricas_test, figura_test = evaluar(modelo, X_test, y_test, nombre, "test")
+        metricas, figuras_val = evaluar(modelo, X_val, y_val, nombre, "val")
+        metricas_test, figuras_test = evaluar(modelo, X_test, y_test, nombre, "test")
         metricas.update(metricas_test)
 
         mlflow.log_params(
@@ -99,8 +101,16 @@ def correr_run(nombre, modelo, params, datos, version_datos):
         mlflow.set_tag("equipo", "06")
         mlflow.set_tag("pregunta", "P2")
         mlflow.set_tag("git_commit", obtener_git_commit())
-        mlflow.log_artifact(figura_val)
-        mlflow.log_artifact(figura_test)
+        for figura in figuras_val + figuras_test:
+            mlflow.log_artifact(figura, artifact_path="plots")
+
+        # Versión de los datos: manifiesto de la ingesta y conjunto de entrenamiento
+        mlflow.log_artifact(config.MANIFEST_PATH, artifact_path="data")
+        train_df = pd.concat([X_train, y_train], axis=1)
+        dataset = mlflow.data.from_pandas(
+            train_df, source=str(config.PROCESSED_DATA_DIR), name="p2-train", targets="riesgo"
+        )
+        mlflow.log_input(dataset, context="training")
         print(nombre, metricas)
 
 
