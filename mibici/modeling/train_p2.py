@@ -108,6 +108,7 @@ def correr_run(nombre, modelo, params, datos, version_datos,model_family,stage_o
         mlflow.set_tag("git_commit", obtener_git_commit())
         mlflow.set_tag("model_family", model_family)
         mlflow.set_tag("stage_of_work", stage_of_work)
+        mlflow.set_tag("version_datos", version_datos)
         for figura in figuras_val + figuras_test:
             mlflow.log_artifact(figura, artifact_path="plots")
 
