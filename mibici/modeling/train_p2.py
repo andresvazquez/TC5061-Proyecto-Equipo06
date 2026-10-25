@@ -4,7 +4,10 @@ import mlflow
 import pandas as pd
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
 
 from mibici import config
 from mibici.dataset import calcular_hash
@@ -127,7 +130,7 @@ def parse_args():
 
     parser.add_argument(
         "--model",
-        choices=["baseline", "rf", "all"],
+        choices=["baseline", "rf", "lr", "rf-search", "all"],
         default="all",
         help="Modelo de P2 que se desea ejecutar.",
     )
@@ -144,6 +147,13 @@ def parse_args():
         type=int,
         default=10,
         help="Profundidad maxima del Random Forest.",
+    )
+
+    parser.add_argument(
+        "--max-iter",
+        type=int,
+        default=100,
+        help="Numero maximo de iteraciones de la regresion logistica.",
     )
 
     return parser.parse_args()
@@ -211,6 +221,72 @@ def main():
             model_family="random_forest",
             stage_of_work="candidate",
         )
+
+    # Candidato: regresión logística con las variables escaladas y el mismo peso de clases
+    if args.model in ("lr", "all"):
+        params = {
+            "max_iter": args.max_iter,
+            "class_weight": {
+                0: 0.1,
+                1: 0.9,
+            },
+            "random_state": config.SEMILLA,
+        }
+
+        candidato = Pipeline([
+            ("escalador", MinMaxScaler()),
+            ("modelo", LogisticRegression(**params)),
+        ])
+
+        correr_run(
+            "p2-regresion-logistica",
+            candidato,
+            params,
+            datos,
+            version_datos,
+            model_family="logistic_regression",
+            stage_of_work="candidate",
+        )
+
+    # Búsqueda de hiperparámetros del bosque: un run padre y un run hijo por combinación
+    if args.model in ("rf-search", "all"):
+        param_grid = [
+            {"n_estimators": 100, "max_depth": 5},
+            {"n_estimators": 100, "max_depth": 15},
+            {"n_estimators": 200, "max_depth": 5},
+            {"n_estimators": 200, "max_depth": 15},
+        ]
+
+        with mlflow.start_run(run_name="p2-rf-busqueda"):
+            mlflow.set_tags({
+                "equipo": "06",
+                "pregunta": "P2",
+                "model_family": "random_forest",
+                "stage_of_work": "search",
+                "git_commit": obtener_git_commit(),
+            })
+
+            for i, combinacion in enumerate(param_grid, start=1):
+                params = {
+                    **combinacion,
+                    "class_weight": {
+                        0: 0.1,
+                        1: 0.9,
+                    },
+                    "n_jobs": -1,
+                    "random_state": config.SEMILLA,
+                }
+
+                correr_run(
+                    f"p2-rf-trial-{i}",
+                    RandomForestClassifier(**params),
+                    params,
+                    datos,
+                    version_datos,
+                    model_family="random_forest",
+                    stage_of_work="search",
+                    nested=True,
+                )
 
 
 if __name__ == "__main__":

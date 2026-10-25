@@ -11,6 +11,8 @@ MODELOS_VALIDOS = {
     "p2": {
         "baseline",
         "rf",
+        "lr",
+        "rf-search",
         "all",
     },
     "p3": {
@@ -61,7 +63,7 @@ def parse_args():
         "--max-iter",
         type=int,
         default=100,
-        help="Numero maximo de iteraciones para P1 HGB.",
+        help="Numero maximo de iteraciones para P1 HGB y P2 regresion logistica.",
     )
 
     parser.add_argument(
@@ -129,6 +131,8 @@ def construir_comando(args):
             str(args.n_estimators),
             "--max-depth",
             str(args.max_depth),
+            "--max-iter",
+            str(args.max_iter),
         ]
 
     return [
