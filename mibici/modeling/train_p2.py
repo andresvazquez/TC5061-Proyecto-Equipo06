@@ -137,7 +137,7 @@ def parse_args():
 
     parser.add_argument(
         "--model",
-        choices=["baseline", "rf", "lr", "rf-search", "all"],
+        choices=["baseline", "rf", "lr", "rf-search", "rf-features-search", "all"],
         default="all",
         help="Modelo de P2 que se desea ejecutar.",
     )

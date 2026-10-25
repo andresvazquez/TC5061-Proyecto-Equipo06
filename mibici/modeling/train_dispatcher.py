@@ -15,6 +15,7 @@ MODELOS_VALIDOS = {
         "rf",
         "lr",
         "rf-search",
+        "rf-features-search",
         "all",
     },
     "p3": {
