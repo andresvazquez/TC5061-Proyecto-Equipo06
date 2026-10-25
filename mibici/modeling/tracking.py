@@ -7,6 +7,8 @@ from mlflow.models import infer_signature
 
 from mibici import config
 
+import os
+
 
 def obtener_git_commit():
     """
@@ -106,6 +108,7 @@ class RunMLflow:
             "git_commit": obtener_git_commit(),
             "model_family": self.model_family,
             "stage_of_work": self.stage_of_work,
+            "version_datos": self.version_datos,
         })
 
         return self
@@ -128,12 +131,13 @@ class RunMLflow:
         """
         mlflow.log_metrics(metricas)
 
-    def registrar_artefacto(self, ruta):
+    def registrar_artefacto(self, ruta, dir_remoto: str = None):
         """
         Registra un archivo como artefacto del run.
 
         Args:
             ruta (str | Path): Ruta al archivo que sera registrado.
+            dir_remoto (str, opcional): Subcarpeta dentro de MLflow donde se guardara el artefacto.
         """
         ruta = Path(ruta)
 
@@ -142,7 +146,7 @@ class RunMLflow:
                 f"No se encontro el artefacto: {ruta}"
             )
 
-        mlflow.log_artifact(str(ruta))
+        mlflow.log_artifact(str(ruta), artifact_path=dir_remoto)
 
     def log_model(self, model, X_sample, artifact_path="model"):
         """
@@ -168,6 +172,19 @@ class RunMLflow:
             input_example=input_example,
             skops_trusted_types=trusted_types,
         )
+
+    def log_plot(self, fig_path, artifact_path="plots"):
+        """
+        Registra una imagen/gráfica guardada en MLflow dentro de una subcarpeta (ej. 'plots/')
+        """
+        mlflow.log_artifact(fig_path, artifact_path=artifact_path)
+
+    def log_config(self, config_path="mibici/config.py", artifact_path="config"):
+        """
+        Registra el archivo de configuración utilizado en el experimento 
+        """
+        if os.path.exists(config_path):
+            mlflow.log_artifact(config_path, artifact_path=artifact_path)
 
     def finalizar(self):
         """
