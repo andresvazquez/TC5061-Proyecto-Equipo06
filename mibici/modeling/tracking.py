@@ -56,11 +56,15 @@ class RunMLflow:
         fecha_inicio=None,
         fecha_fin=None,
         nested=False,
+        model_family=None,
+        stage_of_work=None,
         ):
         self.pregunta = pregunta
         self.nombre_run = nombre_run
         self.version_datos = version_datos
         self.nested = nested
+        self.model_family = model_family
+        self.stage_of_work = stage_of_work
 
         self.fecha_inicio = (
             fecha_inicio
@@ -98,6 +102,8 @@ class RunMLflow:
             "equipo": "06",
             "pregunta": self.pregunta,
             "git_commit": obtener_git_commit(),
+            "model_family": self.model_family,
+            "stage_of_work": self.stage_of_work,
         })
 
         return self

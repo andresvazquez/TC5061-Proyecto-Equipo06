@@ -193,7 +193,8 @@ def main():
 
     # RUN 1: BASELINE (Demanda de la semana pasada)
     if args.model in ("baseline", "all"):
-        with RunMLflow(pregunta="P1", nombre_run="Baseline_P1_Lag168", version_datos=version_datos) as tracker:
+        with RunMLflow(pregunta="P1", nombre_run="Baseline_P1_Lag168", version_datos=version_datos,
+                       model_family="baseline_lag_168",stage_of_work="baseline") as tracker:
             tracker.registrar_parametros({"modelo_tipo": "Baseline_Lag_168"})
 
             # Predicciones
@@ -219,7 +220,8 @@ def main():
 
     # RUN 2: MODELO CANDIDATO (HistGradientBoosting)
     if args.model in ("hgb", "all"):
-        with RunMLflow(pregunta="P1", nombre_run="Candidato_HistGradientBoosting", version_datos=version_datos) as tracker:
+        with RunMLflow(pregunta="P1", nombre_run="Candidato_HistGradientBoosting", version_datos=version_datos,
+                       model_family="hist_gradient_boosting",stage_of_work="candidate",) as tracker:
             tracker.registrar_parametros(
                 {
                     "modelo_tipo": "HistGradientBoostingRegressor",

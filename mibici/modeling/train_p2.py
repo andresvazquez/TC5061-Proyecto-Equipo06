@@ -76,11 +76,11 @@ def evaluar(modelo, X, y, nombre, prefijo):
     return metricas, [ruta_pr, ruta_matriz]
 
 
-def correr_run(nombre, modelo, params, datos, version_datos):
+def correr_run(nombre, modelo, params, datos, version_datos,model_family,stage_of_work,nested=False,):
     # Entrena el modelo y registra el run en MLflow
     X_train, y_train, X_val, y_val, X_test, y_test = datos
 
-    with mlflow.start_run(run_name=nombre):
+    with mlflow.start_run(run_name=nombre,nested=nested):
         modelo.fit(X_train, y_train)
 
         metricas, figuras_val = evaluar(modelo, X_val, y_val, nombre, "val")
@@ -103,6 +103,8 @@ def correr_run(nombre, modelo, params, datos, version_datos):
         mlflow.set_tag("equipo", "06")
         mlflow.set_tag("pregunta", "P2")
         mlflow.set_tag("git_commit", obtener_git_commit())
+        mlflow.set_tag("model_family", model_family)
+        mlflow.set_tag("stage_of_work", stage_of_work)
         for figura in figuras_val + figuras_test:
             mlflow.log_artifact(figura, artifact_path="plots")
 
@@ -179,6 +181,8 @@ def main():
             params,
             datos,
             version_datos,
+            model_family="dummy_classifier",
+            stage_of_work="baseline",
         )
 
     # Candidato: bosque aleatorio, con más peso a la clase de riesgo
@@ -204,6 +208,8 @@ def main():
             params,
             datos,
             version_datos,
+            model_family="random_forest",
+            stage_of_work="candidate",
         )
 
 
