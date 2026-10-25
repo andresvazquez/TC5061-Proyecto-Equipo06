@@ -4,7 +4,7 @@ import tempfile
 
 import joblib
 import pandas as pd
-from sklearn.cluster import KMeans
+from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.metrics import davies_bouldin_score, silhouette_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -30,6 +30,17 @@ def parse_args():
             "Entrena el baseline P3 con KMeans utilizando "
             "variables de volumen por estacion."
         )
+    )
+
+    parser.add_argument(
+        "--model",
+        choices=[
+            "baseline",
+            "agglomerative",
+            "all",
+        ],
+        default="baseline",
+        help="Modelo P3 que se desea ejecutar.",
     )
 
     parser.add_argument(
@@ -207,6 +218,75 @@ def entrenar_baseline(perfil, n_clusters):
         davies_bouldin,
     )
 
+def entrenar_agglomerative(perfil, n_clusters):
+    """
+    Ajusta la candidata P3 con Agglomerative Clustering.
+
+    Utiliza las mismas variables de volumen y el mismo numero
+    de grupos que el baseline para comparar exclusivamente el
+    efecto de cambiar el algoritmo.
+
+    Args:
+        perfil (pd.DataFrame): Perfil agregado por estacion.
+        n_clusters (int): Numero fijo de grupos.
+
+    Returns:
+        tuple: Pipeline entrenado, etiquetas, silhouette y
+        Davies-Bouldin.
+    """
+    if n_clusters < 2:
+        raise ValueError(
+            "n_clusters debe ser al menos 2."
+        )
+
+    if n_clusters >= len(perfil):
+        raise ValueError(
+            "n_clusters debe ser menor que el numero de estaciones."
+        )
+
+    datos_modelo = perfil[
+        VARIABLES_BASELINE
+    ].copy()
+
+    pipeline = Pipeline(
+        steps=[
+            (
+                "scaler",
+                StandardScaler(),
+            ),
+            (
+                "agglomerative",
+                AgglomerativeClustering(
+                    n_clusters=n_clusters,
+                ),
+            ),
+        ]
+    )
+
+    etiquetas = pipeline.fit_predict(
+        datos_modelo
+    )
+
+    datos_escalados = pipeline.named_steps[
+        "scaler"
+    ].transform(datos_modelo)
+
+    silhouette = silhouette_score(
+        datos_escalados,
+        etiquetas,
+    )
+
+    davies_bouldin = davies_bouldin_score(
+        datos_escalados,
+        etiquetas,
+    )
+
+    return (
+        pipeline,
+        etiquetas,
+        silhouette,
+        davies_bouldin,
+    )
 
 def main():
     """
@@ -234,15 +314,44 @@ def main():
         estaciones,
     )
 
-    (
-        modelo,
-        etiquetas,
-        silhouette,
-        davies_bouldin,
-    ) = entrenar_baseline(
-        perfil,
-        args.n_clusters,
-    )
+    if args.model == "baseline":
+        (
+            modelo,
+            etiquetas,
+            silhouette,
+            davies_bouldin,
+        ) = entrenar_baseline(
+            perfil,
+            args.n_clusters,
+        )
+
+        nombre_run = "p3-baseline-kmeans-volumen"
+        nombre_modelo = "KMeans"
+        model_family = "kmeans"
+        stage_of_work = "baseline"
+        nombre_artefacto = "baseline_kmeans_p3.joblib"
+
+    elif args.model == "agglomerative":
+        (
+            modelo,
+            etiquetas,
+            silhouette,
+            davies_bouldin,
+        ) = entrenar_agglomerative(
+            perfil,
+            args.n_clusters,
+        )
+
+        nombre_run = "p3-candidato-agglomerative-volumen"
+        nombre_modelo = "AgglomerativeClustering"
+        model_family = "agglomerative"
+        stage_of_work = "candidate"
+        nombre_artefacto = "candidato_agglomerative_p3.joblib"
+
+    else:
+        raise ValueError(
+            "Use baseline o agglomerative para una corrida individual."
+        )
 
     resumen = perfil[
         [
@@ -275,7 +384,7 @@ def main():
 
         ruta_modelo = (
             directorio
-            / "baseline_kmeans_p3.joblib"
+            / nombre_artefacto
         )
 
         resumen.to_csv(
@@ -290,24 +399,31 @@ def main():
 
         with RunMLflow(
             pregunta="P3",
-            nombre_run="p3-baseline-kmeans-volumen",
+            nombre_run=nombre_run,
             version_datos=version_datos,
             fecha_inicio=config.FECHA_INICIO,
             fecha_fin=fecha_fin_entrenamiento,
-            model_family="kmeans",
-            stage_of_work="baseline",
+            model_family=model_family,
+            stage_of_work=stage_of_work,
         ) as run:
-            run.registrar_parametros({
-                "modelo": "KMeans",
+            parametros = {
+                "modelo": nombre_modelo,
                 "n_clusters": args.n_clusters,
-                "random_state": config.SEMILLA,
-                "n_init": 10,
                 "variables": ",".join(
                     VARIABLES_BASELINE
                 ),
                 "archivos_entrenamiento": len(rutas),
                 "estaciones_entrenamiento": len(perfil),
-            })
+            }
+
+            if args.model == "baseline":
+                parametros.update({
+                    "random_state": config.SEMILLA,
+                    "n_init": 10,
+                })
+            run.registrar_parametros(
+                parametros
+            )
 
             run.registrar_metricas({
                 "train_silhouette": silhouette,
@@ -322,7 +438,7 @@ def main():
                 ruta_modelo
             )
 
-    print("\nBaseline P3 completado")
+    print(f"\nP3 completado: {nombre_modelo}")
     print("Estaciones:", len(perfil))
     print("Clusters:", args.n_clusters)
     print("Silhouette:", silhouette)
