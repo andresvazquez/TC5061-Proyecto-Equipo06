@@ -213,10 +213,14 @@ def main():
             )
             tracker.registrar_metricas(metricas_baseline)
 
+            # 11c & 12: Gráfica organizada dentro de 'plots/'
             img_baseline = guardar_grafica_predicciones(
                 y_test, y_test_pred_base, "Baseline", "grafica_baseline.png"
             )
-            tracker.registrar_artefacto(img_baseline)
+            tracker.registrar_artefacto(img_baseline, dir_remoto="plots")
+
+            # 11f & 12: Configuración organizada dentro de 'config/'
+            tracker.registrar_artefacto("mibici/config.py", dir_remoto="config")
 
             print("[Baseline] Métricas registradas:", metricas_baseline)
 
@@ -259,10 +263,14 @@ def main():
             )
             tracker.registrar_metricas(metricas_candidato)
 
+            # 11c & 12: Gráfica organizada dentro de 'plots/'
             img_candidato = guardar_grafica_predicciones(
                 y_test, y_test_pred_cand, "HistGradientBoosting", "grafica_candidato.png"
             )
-            tracker.registrar_artefacto(img_candidato)
+            tracker.registrar_artefacto(img_candidato, dir_remoto="plots")
+
+            # 11f & 12: Configuración organizada dentro de 'config/'
+            tracker.registrar_artefacto("mibici/config.py", dir_remoto="config")
 
             # FILA 11a: Modelo con firma e Input Example
             tracker.log_model(model=modelo, X_sample=X_val, artifact_path="model")
@@ -294,6 +302,9 @@ def main():
                 "n_combinaciones": len(combinaciones),
                 "random_state": config.SEMILLA,
             })
+            
+            # 11f & 12: Registrar config en la corrida padre
+            padre.registrar_artefacto("mibici/config.py", dir_remoto="config")
 
             # Corridas Hijas
             for i, params in enumerate(combinaciones, start=1):
@@ -337,7 +348,6 @@ def main():
     # FILA 7c: VARIANDO FEATURES (Sin variables de Lag/Ventanas)
     # ------------------------------------------------------------
     if args.model in ("features", "all"):
-        # Subconjunto de características sin métricas agregadas móviles
         X_cols_reduced = [
             "hora_del_dia",
             "dia_de_semana",
@@ -383,10 +393,14 @@ def main():
             )
             tracker.registrar_metricas(metricas_feat)
 
+            # 11c & 12: Gráfica organizada dentro de 'plots/'
             img_feat = guardar_grafica_predicciones(
                 y_test, y_test_pred_feat, "HGB_Features_Reducidas", "grafica_features_reducidas.png"
             )
-            tracker.registrar_artefacto(img_feat)
+            tracker.registrar_artefacto(img_feat, dir_remoto="plots")
+
+            # 11f & 12: Configuración organizada dentro de 'config/'
+            tracker.registrar_artefacto("mibici/config.py", dir_remoto="config")
 
             # FILA 11a: Registro del modelo con firma
             tracker.log_model(model=modelo_feat, X_sample=X_val_red, artifact_path="model")
