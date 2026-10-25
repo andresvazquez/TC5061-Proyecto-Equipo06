@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 
 import joblib
+import mlflow
 import pandas as pd
 from sklearn.cluster import AgglomerativeClustering, KMeans
 from sklearn.metrics import davies_bouldin_score, silhouette_score
@@ -13,6 +14,7 @@ from mibici import config
 from mibici.dataset import calcular_hash
 from mibici.features import perfil_uso_estacion
 from mibici.modeling.tracking import RunMLflow
+from mibici.plots import graficar_perfiles_clusters
 
 VARIABLES_BASELINE = [
     "salidas",
@@ -501,9 +503,19 @@ def main():
             / nombre_artefacto
         )
 
+        ruta_perfiles = (
+            directorio
+            / "perfiles_clusters_p3.png"
+        )
+
         resumen.to_csv(
             ruta_resumen,
             index=False,
+        )
+
+        graficar_perfiles_clusters(
+            resumen,
+            ruta_perfiles,
         )
 
         joblib.dump(
@@ -557,6 +569,19 @@ def main():
 
             run.registrar_artefacto(
                 ruta_modelo
+            )
+
+            run.registrar_artefacto(
+                ruta_resumen
+            )
+
+            run.registrar_artefacto(
+                ruta_modelo
+            )
+
+            mlflow.log_artifact(
+                str(ruta_perfiles),
+                artifact_path="plots",
             )
 
     print(f"\nP3 completado: {nombre_modelo}")
