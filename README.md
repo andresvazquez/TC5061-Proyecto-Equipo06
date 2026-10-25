@@ -166,6 +166,18 @@ mlflow run . -e ingest --env-manager local
 
 Si MLFLOW_TRACKING_URI apunta al servidor local, hay que levantarlo antes (se explica en Servidor de tracking). Sin esa variable, mlflow run guarda el run en un mlflow.db local y no necesita servidor.
 
+#### Entrenamiento con mlflow run
+
+El entry point train recibe la pregunta, el modelo y sus hiperparámetros. Con el servidor de tracking levantado (se explica en Servidor de tracking), el entorno virtual activo y desde la raíz del proyecto, un ejemplo para P2 es:
+
+```
+mlflow run . -e train -P question=p2 -P model=rf -P n_estimators=50 -P max_depth=10 --experiment-name mibici-equipo06 --env-manager local
+```
+
+El flag --experiment-name es necesario: mlflow run crea su run en el experimento Default y los scripts de entrenamiento registran en mibici-equipo06, así que sin el flag MLflow rechaza la corrida porque el experimento activo no coincide. La ingesta no lo necesita porque dataset.py no usa MLflow. Y --env-manager local se usa por la misma razón que en la ingesta, si no se tiene pyenv.
+
+Cada mlflow run lanza un solo modelo (en P2 por ejemplo: baseline, rf, lr o rf-search). Los hiperparámetros que no se indican con -P toman el valor por defecto del MLproject.
+
 ### Servidor de tracking
 
 El Model Registry necesita un almacenamiento respaldado por una base de datos, así que el tracking se hace contra un servidor local con SQLite. Cada integrante levanta el suyo en su máquina, con el entorno virtual activo y desde la raíz del proyecto, en una terminal aparte que se deja abierta:
