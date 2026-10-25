@@ -270,3 +270,183 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+ # PASO 1. DEFINIR LAS CONFIGURACIONES
+    # ------------------------------------------------------------
+    # Christian debe definir las combinaciones de hiperparametros
+    # que desea comparar. Los siguientes valores son ejemplos.
+    #
+    # combinaciones = [
+    #     {"max_iter": 100, "learning_rate": 0.05},
+    #     {"max_iter": 200, "learning_rate": 0.05},
+    #     {"max_iter": 200, "learning_rate": 0.10},
+    # ]
+
+
+    # ------------------------------------------------------------
+    # PASO 2. CREAR LA CORRIDA PADRE
+    # ------------------------------------------------------------
+    # La corrida padre agrupa toda la busqueda.
+    # No necesita entrenar un modelo.
+    #
+    # nested=False indica que la corrida no se crea como hija.
+    #
+    # with RunMLflow(
+    #     pregunta="P1",
+    #     nombre_run="Busqueda_Hiperparametros_P1",
+    #     version_datos=version_datos,
+    #     nested=False,
+    # ) as padre:
+
+
+        # --------------------------------------------------------
+        # PASO 3. REGISTRAR LA CONFIGURACION GENERAL DE LA BUSQUEDA
+        # --------------------------------------------------------
+        # Registrar en el padre la informacion general:
+        # tipo de modelo, numero de combinaciones y semilla.
+        #
+        # padre.registrar_parametros({
+        #     "modelo_tipo": "HistGradientBoostingRegressor",
+        #     "tipo_busqueda": "manual",
+        #     "n_combinaciones": len(combinaciones),
+        #     "random_state": config.SEMILLA,
+        # })
+
+
+        # --------------------------------------------------------
+        # PASO 4. RECORRER LAS CONFIGURACIONES
+        # --------------------------------------------------------
+        # Para cada combinacion se debe crear una corrida hija.
+        #
+        # for i, params in enumerate(combinaciones, start=1):
+
+
+            # ----------------------------------------------------
+            # PASO 5. CREAR UNA CORRIDA HIJA
+            # ----------------------------------------------------
+            # nested=True indica a MLflow que esta corrida pertenece
+            # a la corrida padre que se encuentra activa.
+            #
+            # Cada hija entrenara una configuracion diferente.
+            #
+            # with RunMLflow(
+            #     pregunta="P1",
+            #     nombre_run=f"P1_HGB_Prueba_{i}",
+            #     version_datos=version_datos,
+            #     nested=True,
+            # ) as tracker:
+
+
+                # ------------------------------------------------
+                # PASO 6. REGISTRAR LOS HIPERPARAMETROS
+                # ------------------------------------------------
+                # Registrar la configuracion particular de la hija.
+                #
+                # tracker.registrar_parametros({
+                #     "modelo_tipo": "HistGradientBoostingRegressor",
+                #     **params,
+                #     "random_state": config.SEMILLA,
+                #     "n_features": len(X_cols),
+                # })
+
+
+                # ------------------------------------------------
+                # PASO 7. CREAR EL MODELO
+                # ------------------------------------------------
+                # Crear una nueva instancia para cada configuracion.
+                # Reutilizar el tipo de modelo del RUN 2.
+                #
+                # modelo = HistGradientBoostingRegressor(
+                #     max_iter=params["max_iter"],
+                #     learning_rate=params["learning_rate"],
+                #     random_state=config.SEMILLA,
+                # )
+
+
+                # ------------------------------------------------
+                # PASO 8. ENTRENAR EL MODELO
+                # ------------------------------------------------
+                # Reutilizar las variables que main() ya preparo.
+                # No repetir la ingesta ni el split temporal.
+                #
+                # modelo.fit(X_train, y_train)
+
+
+                # ------------------------------------------------
+                # PASO 9. GENERAR PREDICCIONES DE VALIDACION
+                # ------------------------------------------------
+                # Utilizar validacion para comparar configuraciones.
+                # No seleccionar hiperparametros mirando el conjunto test.
+                #
+                # y_val_pred = modelo.predict(X_val)
+
+
+                # ------------------------------------------------
+                # PASO 10. CALCULAR Y REGISTRAR METRICAS
+                # ------------------------------------------------
+                # Christian debe calcular las metricas de validacion
+                # utilizando la funcion de evaluacion apropiada.
+                #
+                # Por ejemplo, si el equipo utiliza MAE y RMSE:
+                #
+                # metricas_val = {
+                #     "val_mae": ...,
+                #     "val_rmse": ...,
+                # }
+                #
+                # Registrar las metricas en la corrida hija:
+                #
+                # tracker.registrar_metricas(metricas_val)
+
+
+                # ------------------------------------------------
+                # PASO 11. REGISTRAR LOS ARTEFACTOS
+                # ------------------------------------------------
+                # Christian debe guardar y registrar los artefactos
+                # que respalden el resultado de cada configuracion.
+                #
+                # Ejemplos:
+                # - Grafica de predicciones o residuales.
+                # - Configuracion utilizada.
+                #
+                # Reutilizar las funciones graficas existentes
+                # cuando sean compatibles con los datos de validacion.
+                #
+                # tracker.registrar_artefacto(ruta_grafica)
+
+
+                # ------------------------------------------------
+                # PASO 12. REGISTRAR EL MODELO ENTRENADO
+                # ------------------------------------------------
+                # Registrar el modelo de la hija con MLflow.
+                # Incluir su firma y un ejemplo de entrada.
+                #
+                # Christian puede reutilizar el patron del RUN 2:
+                #
+                # mlflow.sklearn.log_model(
+                #     sk_model=modelo,
+                #     name=f"modelo_hgb_prueba_{i}",
+                #     signature=signature,
+                #     input_example=input_example,
+                # )
+                #
+                # Adaptar los argumentos a la version de MLflow
+                # y al procedimiento que utilice el equipo.
+                #
+                # El registro en el Model Registry del modelo ganador
+                # corresponde a una tarea posterior.
+
+
+    # ------------------------------------------------------------
+    # PASO 13. COMPARAR LAS CONFIGURACIONES
+    # ------------------------------------------------------------
+    # Despues de ejecutar la busqueda:
+    #
+    # - Revisar las metricas de validacion de todas las hijas.
+    # - Comparar los resultados con el baseline de P1.
+    # - Elegir la configuracion con base en las metricas acordadas.
+    # - Evaluar en test la configuracion seleccionada.
+    # - Justificar la eleccion y documentar los resultados.
+    #
+    # No utilizar el conjunto test para escoger los hiperparametros.

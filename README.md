@@ -148,6 +148,24 @@ Al final crea references/data_manifest.csv con la URL, el número de registros y
 
 Son más de 1 GB, así que la primera vez tarda varios minutos. Si un archivo ya está en data/raw no se vuelve a descargar.
 
+#### Ingesta con mlflow run
+
+La ingesta también se puede lanzar desde el MLflow Project. Con el entorno virtual activo y desde la raíz del proyecto, se corre:
+
+```
+mlflow run . -e ingest
+```
+
+El entry point ingest corre dataset.py, así que no recibe parámetros: el rango de meses y las rutas salen de config.py. Al terminar imprime la versión de los datos y deja el manifiesto en references/data_manifest.csv, igual que arriba.
+
+Por defecto mlflow run crea un entorno aparte con python_env.yaml y para eso necesita tener pyenv instalado. Si no se tiene, se puede usar el entorno que ya está instalado:
+
+```
+mlflow run . -e ingest --env-manager local
+```
+
+Si MLFLOW_TRACKING_URI apunta al servidor local, hay que levantarlo antes (se explica en Servidor de tracking). Sin esa variable, mlflow run guarda el run en un mlflow.db local y no necesita servidor.
+
 ### Servidor de tracking
 
 El Model Registry necesita un almacenamiento respaldado por una base de datos, así que el tracking se hace contra un servidor local con SQLite. Cada integrante levanta el suyo en su máquina, con el entorno virtual activo y desde la raíz del proyecto, en una terminal aparte que se deja abierta:
