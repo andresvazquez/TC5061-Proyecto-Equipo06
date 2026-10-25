@@ -11,10 +11,13 @@ MODELOS_VALIDOS = {
     "p2": {
         "baseline",
         "rf",
+        "lr",
+        "rf-search",
         "all",
     },
     "p3": {
         "kmeans",
+        "agglomerative",
     },
 }
 
@@ -61,7 +64,7 @@ def parse_args():
         "--max-iter",
         type=int,
         default=100,
-        help="Numero maximo de iteraciones para P1 HGB.",
+        help="Numero maximo de iteraciones para P1 HGB y P2 regresion logistica.",
     )
 
     parser.add_argument(
@@ -129,16 +132,24 @@ def construir_comando(args):
             str(args.n_estimators),
             "--max-depth",
             str(args.max_depth),
+            "--max-iter",
+            str(args.max_iter),
         ]
+
+    modelo_p3 = {
+        "kmeans": "baseline",
+        "agglomerative": "agglomerative",
+    }[args.model]
 
     return [
         sys.executable,
         "-m",
         "mibici.modeling.train_p3",
+        "--model",
+        modelo_p3,
         "--n-clusters",
         str(args.n_clusters),
     ]
-
 
 def main():
     """
