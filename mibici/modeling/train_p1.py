@@ -265,7 +265,7 @@ def main():
             tracker.registrar_artefacto(img_candidato)
 
             # FILA 11a: Modelo con firma e Input Example
-            # tracker.log_model(model=modelo, X_sample=X_val, artifact_path="model")
+            tracker.log_model(model=modelo, X_sample=X_val, artifact_path="model")
 
             print("[7a - Candidato Algoritmo] Métricas registradas:", metricas_candidato)
 
@@ -329,7 +329,7 @@ def main():
                     })
 
                     # FILA 11a: Modelo de la corrida hija con firma
-                    # hija.log_model(model=modelo_hija, X_sample=X_val, artifact_path="model")
+                    hija.log_model(model=modelo_hija, X_sample=X_val, artifact_path="model")
 
             print(f"[7b - Búsqueda Hiperparámetros] {len(combinaciones)} corridas hijas completadas.")
 
@@ -389,7 +389,7 @@ def main():
             tracker.registrar_artefacto(img_feat)
 
             # FILA 11a: Registro del modelo con firma
-            # tracker.log_model(model=modelo_feat, X_sample=X_val_red, artifact_path="model")
+            tracker.log_model(model=modelo_feat, X_sample=X_val_red, artifact_path="model")
 
             print("[7c - Variación Features] Métricas registradas:", metricas_feat)
 

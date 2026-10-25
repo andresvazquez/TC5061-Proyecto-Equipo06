@@ -2,6 +2,8 @@ from pathlib import Path
 import subprocess
 
 import mlflow
+import mlflow.sklearn
+from mlflow.models import infer_signature
 
 from mibici import config
 
@@ -141,6 +143,31 @@ class RunMLflow:
             )
 
         mlflow.log_artifact(str(ruta))
+
+    def log_model(self, model, X_sample, artifact_path="model"):
+        """
+        Registra el modelo con firma (signature) y un ejemplo de entrada (input_example) [Fila 11a].
+        """
+        # Inferir la firma (Signature)
+        predictions = model.predict(X_sample)
+        signature = infer_signature(X_sample, predictions)
+
+        # Muestra de entrada (Input Example)
+        input_example = X_sample.head(5) if hasattr(X_sample, "head") else X_sample[:5]
+
+        # Tipos de confianza necesarios para HistGradientBoosting
+        trusted_types = [
+            "sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor"
+        ]
+
+        # Registrar el modelo
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            name=artifact_path,  # Se usa 'name' para evitar el warning de 'artifact_path'
+            signature=signature,
+            input_example=input_example,
+            skops_trusted_types=trusted_types,
+        )
 
     def finalizar(self):
         """

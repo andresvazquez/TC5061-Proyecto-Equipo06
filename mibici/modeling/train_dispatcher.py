@@ -6,6 +6,8 @@ MODELOS_VALIDOS = {
     "p1": {
         "baseline",
         "hgb",
+        "search",
+        "features",
         "all",
     },
     "p2": {
