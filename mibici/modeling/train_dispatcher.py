@@ -23,6 +23,7 @@ MODELOS_VALIDOS = {
         "agglomerative",
         "kmeans-search",
         "kmeans-full",
+        "kmeans-stability",
     },
 }
 
@@ -146,6 +147,13 @@ def construir_comando(args):
             sys.executable,
             "-m",
             "mibici.modeling.train_p3_search",
+        ]
+
+    if args.model == "kmeans-stability":
+        return [
+            sys.executable,
+            "-m",
+            "mibici.modeling.train_p3_stability",
         ]
 
     modelo_p3 = {
