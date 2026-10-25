@@ -11,7 +11,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from mibici import config
 from mibici.dataset import calcular_hash
-from mibici.features import construir_malla, etiqueta_riesgo, features_p2
+from mibici.features import construir_malla, etiqueta_riesgo, features_p2,agregar_features_temporales_p2
 from mibici.modeling.tracking import obtener_git_commit
 from mibici.plots import graficar_curva_pr, graficar_matriz_confusion
 
@@ -24,6 +24,12 @@ VARIABLES = [
     "saldo_3h",
     "salidas_hora_previa",
     "llegadas_hora_previa",
+]
+
+VARIABLES_RF_FEATURES = VARIABLES + [
+    "hora_dia",
+    "dia_semana",
+    "es_fin_semana",
 ]
 
 
@@ -171,6 +177,23 @@ def main():
         validacion[VARIABLES], validacion["riesgo"],
         prueba[VARIABLES], prueba["riesgo"],
     )
+
+    malla_features = agregar_features_temporales_p2(malla)
+
+    entrenamiento_v3, validacion_v3, prueba_v3 = partir_por_fecha(
+        malla_features
+    )
+
+    datos_features = (
+        entrenamiento_v3[VARIABLES_RF_FEATURES],
+        entrenamiento_v3["riesgo"],
+        validacion_v3[VARIABLES_RF_FEATURES],
+        validacion_v3["riesgo"],
+        prueba_v3[VARIABLES_RF_FEATURES],
+        prueba_v3["riesgo"],
+    )
+
+
     version_datos = calcular_hash(config.MANIFEST_PATH)
 
     mlflow.set_tracking_uri(config.TRACKING_URI)
@@ -283,6 +306,55 @@ def main():
                     RandomForestClassifier(**params),
                     params,
                     datos,
+                    version_datos,
+                    model_family="random_forest",
+                    stage_of_work="search",
+                    nested=True,
+                )
+    if args.model in ("rf-features-search", "all"):
+        param_grid = [
+            {"n_estimators": 100, "max_depth": 5},
+            {"n_estimators": 100, "max_depth": 15},
+            {"n_estimators": 200, "max_depth": 5},
+            {"n_estimators": 200, "max_depth": 15},
+        ]
+
+        # CORRIDA PADRE
+        with mlflow.start_run(
+            run_name="p2-rf-features-busqueda"
+        ):
+            mlflow.set_tags({
+                "equipo": "06",
+                "pregunta": "P2",
+                "model_family": "random_forest",
+                "stage_of_work": "search",
+                "git_commit": obtener_git_commit(),
+                "version_datos": version_datos,
+            })
+
+            mlflow.log_params({
+                "variables": ",".join(VARIABLES_RF_FEATURES),
+                "numero_features": len(VARIABLES_RF_FEATURES),
+                "numero_combinaciones": len(param_grid),
+            })
+
+            # CORRIDAS HIJAS
+            for i, combinacion in enumerate(param_grid, start=1):
+                params = {
+                    **combinacion,
+                    "class_weight": {
+                        0: 0.1,
+                        1: 0.9,
+                    },
+                    "n_jobs": -1,
+                    "random_state": config.SEMILLA,
+                }
+
+                correr_run(
+                    f"p2-rf-features-trial-{i}",
+                    RandomForestClassifier(**params),
+                    params,
+                    datos_features,
                     version_datos,
                     model_family="random_forest",
                     stage_of_work="search",

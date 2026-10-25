@@ -504,3 +504,13 @@ def etiqueta_riesgo(malla):
     ] = pd.NA
 
     return resultado.drop(columns=["fecha", "critico"])
+
+def agregar_features_temporales_p2(malla):
+    resultado = malla.copy()
+    horas = pd.to_datetime(resultado["hora"])
+
+    resultado["hora_dia"] = horas.dt.hour.astype(int)
+    resultado["dia_semana"] = horas.dt.dayofweek.astype(int)
+    resultado["es_fin_semana"] = (horas.dt.dayofweek >= 5).astype(int)
+
+    return resultado
