@@ -20,6 +20,16 @@ VARIABLES_BASELINE = [
     "volumen_diario",
 ]
 
+VARIABLES_PERFIL_COMPLETO = [
+    *[
+        f"perfil_h{hora:02d}"
+        for hora in range(24)
+    ],
+    "proporcion_fin_semana",
+    "volumen_diario",
+    "saldo_neto",
+    "capacidad",
+]
 
 def parse_args():
     """
@@ -37,7 +47,7 @@ def parse_args():
         choices=[
             "baseline",
             "agglomerative",
-            "all",
+            "full-profile",
         ],
         default="baseline",
         help="Modelo P3 que se desea ejecutar.",
@@ -288,6 +298,83 @@ def entrenar_agglomerative(perfil, n_clusters):
         davies_bouldin,
     )
 
+def entrenar_perfil_completo(
+    perfil,
+    n_clusters,
+    n_init=10,
+):
+    """
+    Ajusta KMeans utilizando el perfil completo de P3.
+
+    Mantiene el algoritmo KMeans y utiliza las variables
+    temporales, de volumen, saldo y capacidad del perfil
+    de estaciones.
+
+    Args:
+        perfil (pd.DataFrame): Perfil agregado por estacion.
+        n_clusters (int): Numero de grupos.
+        n_init (int): Numero de inicializaciones de KMeans.
+
+    Returns:
+        tuple: Pipeline entrenado, etiquetas, silhouette y
+        Davies-Bouldin.
+    """
+    if n_clusters < 2:
+        raise ValueError(
+            "n_clusters debe ser al menos 2."
+        )
+
+    if n_clusters >= len(perfil):
+        raise ValueError(
+            "n_clusters debe ser menor que el numero de estaciones."
+        )
+
+    datos_modelo = perfil[
+        VARIABLES_PERFIL_COMPLETO
+    ].copy()
+
+    pipeline = Pipeline(
+        steps=[
+            (
+                "scaler",
+                StandardScaler(),
+            ),
+            (
+                "kmeans",
+                KMeans(
+                    n_clusters=n_clusters,
+                    n_init=n_init,
+                    random_state=config.SEMILLA,
+                ),
+            ),
+        ]
+    )
+
+    etiquetas = pipeline.fit_predict(
+        datos_modelo
+    )
+
+    datos_escalados = pipeline.named_steps[
+        "scaler"
+    ].transform(datos_modelo)
+
+    silhouette = silhouette_score(
+        datos_escalados,
+        etiquetas,
+    )
+
+    davies_bouldin = davies_bouldin_score(
+        datos_escalados,
+        etiquetas,
+    )
+
+    return (
+        pipeline,
+        etiquetas,
+        silhouette,
+        davies_bouldin,
+    )
+
 def main():
     """
     Ejecuta y registra en MLflow el baseline P3.
@@ -348,9 +435,29 @@ def main():
         stage_of_work = "candidate"
         nombre_artefacto = "candidato_agglomerative_p3.joblib"
 
+    elif args.model == "full-profile":
+        (
+            modelo,
+            etiquetas,
+            silhouette,
+            davies_bouldin,
+        ) = entrenar_perfil_completo(
+            perfil,
+            n_clusters=args.n_clusters,
+            n_init=10,
+        )
+
+        nombre_run = "p3-candidato-kmeans-perfil-completo"
+        nombre_modelo = "KMeansPerfilCompleto"
+        model_family = "kmeans"
+        stage_of_work = "candidate"
+        nombre_artefacto = (
+            "candidato_kmeans_perfil_completo_p3.joblib"
+        )
+
     else:
         raise ValueError(
-            "Use baseline o agglomerative para una corrida individual."
+            "Modelo P3 no soportado."
         )
 
     resumen = perfil[
@@ -377,9 +484,16 @@ def main():
     with tempfile.TemporaryDirectory() as directorio:
         directorio = Path(directorio)
 
+        if args.model == "full-profile":
+            nombre_resumen = (
+                "resumen_clusters_perfil_completo_p3.csv"
+            )
+        else:
+            nombre_resumen = "resumen_clusters_p3.csv"
+
         ruta_resumen = (
             directorio
-            / "resumen_clusters_p3.csv"
+            / nombre_resumen
         )
 
         ruta_modelo = (
@@ -406,17 +520,24 @@ def main():
             model_family=model_family,
             stage_of_work=stage_of_work,
         ) as run:
+            if args.model == "full-profile":
+                variables_modelo = VARIABLES_PERFIL_COMPLETO
+            else:
+                variables_modelo = VARIABLES_BASELINE
             parametros = {
                 "modelo": nombre_modelo,
                 "n_clusters": args.n_clusters,
                 "variables": ",".join(
-                    VARIABLES_BASELINE
+                    variables_modelo
                 ),
                 "archivos_entrenamiento": len(rutas),
                 "estaciones_entrenamiento": len(perfil),
             }
 
-            if args.model == "baseline":
+            if args.model in (
+                "baseline",
+                "full-profile",
+            ):
                 parametros.update({
                     "random_state": config.SEMILLA,
                     "n_init": 10,
