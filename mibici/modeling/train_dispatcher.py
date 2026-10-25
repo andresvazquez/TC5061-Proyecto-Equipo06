@@ -21,6 +21,7 @@ MODELOS_VALIDOS = {
         "kmeans",
         "agglomerative",
         "kmeans-search",
+        "kmeans-full",
     },
 }
 
@@ -149,6 +150,7 @@ def construir_comando(args):
     modelo_p3 = {
         "kmeans": "baseline",
         "agglomerative": "agglomerative",
+        "kmeans-full": "full-profile",
     }[args.model]
 
     return [
