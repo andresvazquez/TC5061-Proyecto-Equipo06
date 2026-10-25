@@ -17,6 +17,7 @@ MODELOS_VALIDOS = {
     },
     "p3": {
         "kmeans",
+        "agglomerative",
     },
 }
 
@@ -135,14 +136,20 @@ def construir_comando(args):
             str(args.max_iter),
         ]
 
+    modelo_p3 = {
+        "kmeans": "baseline",
+        "agglomerative": "agglomerative",
+    }[args.model]
+
     return [
         sys.executable,
         "-m",
         "mibici.modeling.train_p3",
+        "--model",
+        modelo_p3,
         "--n-clusters",
         str(args.n_clusters),
     ]
-
 
 def main():
     """
