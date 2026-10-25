@@ -294,6 +294,8 @@ def main():
             version_datos=version_datos,
             fecha_inicio=config.FECHA_INICIO,
             fecha_fin=fecha_fin_entrenamiento,
+            model_family="kmeans",
+            stage_of_work="baseline",
         ) as run:
             run.registrar_parametros({
                 "modelo": "KMeans",
