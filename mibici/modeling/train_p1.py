@@ -407,6 +407,5 @@ def main():
 
             print("[7c - Variación Features] Métricas registradas:", metricas_feat)
 
-
 if __name__ == "__main__":
     main()
