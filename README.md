@@ -120,6 +120,7 @@ source .venv/bin/activate
 Para instalar dependencias y el paquete local
 ```bash
 pip install --upgrade pip
+pip install -r requirements.txt
 pip install -e .
 ```
 O si tienes Make
