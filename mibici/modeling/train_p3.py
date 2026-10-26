@@ -563,6 +563,26 @@ def main():
                 "train_davies_bouldin": davies_bouldin,
             })
 
+            X_modelo = perfil[
+                variables_modelo
+            ].copy()
+
+            run.log_model(
+                model=modelo,
+                X_sample=X_modelo,
+                artifact_path="model",
+            )
+
+            run.registrar_artefacto(
+                config.MANIFEST_PATH,
+                dir_remoto="data",
+            )
+
+            run.log_config(
+                config_path="mibici/config.py",
+                artifact_path="config",
+            )
+
             run.registrar_artefacto(
                 ruta_resumen
             )

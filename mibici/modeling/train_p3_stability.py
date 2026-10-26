@@ -136,6 +136,16 @@ def main():
         "estaciones_entrenamiento": len(perfil),
     })
 
+    mlflow.log_artifact(
+        str(config.MANIFEST_PATH),
+        artifact_path="data",
+    )
+
+    mlflow.log_artifact(
+        "mibici/config.py",
+        artifact_path="config",
+    )
+
     resultados = []
 
     for semilla in semillas:
