@@ -567,11 +567,12 @@ def main():
                 variables_modelo
             ].copy()
 
-            run.log_model(
-                model=modelo,
-                X_sample=X_modelo,
-                artifact_path="model",
-            )
+            if hasattr(modelo, "predict"):
+                run.log_model(
+                    model=modelo,
+                    X_sample=X_modelo,
+                    artifact_path="model",
+                )
 
             run.registrar_artefacto(
                 config.MANIFEST_PATH,
