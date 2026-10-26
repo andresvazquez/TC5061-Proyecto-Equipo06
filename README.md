@@ -176,7 +176,31 @@ mlflow run . -e train -P question=p2 -P model=rf -P n_estimators=50 -P max_depth
 
 El flag --experiment-name es necesario: mlflow run crea su run en el experimento Default y los scripts de entrenamiento registran en mibici-equipo06, así que sin el flag MLflow rechaza la corrida porque el experimento activo no coincide. La ingesta no lo necesita porque dataset.py no usa MLflow. Y --env-manager local se usa por la misma razón que en la ingesta, si no se tiene pyenv.
 
-Cada mlflow run lanza un solo modelo (en P2 por ejemplo: baseline, rf, lr o rf-search). Los hiperparámetros que no se indican con -P toman el valor por defecto del MLproject.
+Cada mlflow run lanza un solo modelo (en P2 por ejemplo: baseline, rf, lr, rf-search o rf-features-search). Los hiperparámetros que no se indican con -P toman el valor por defecto del MLproject.
+
+#### Reproducir el modelo elegido de cada pregunta
+
+Con el servidor de tracking levantado, MLFLOW_TRACKING_URI apuntando a él, el entorno virtual activo y desde la raíz del proyecto, estos comandos reproducen el modelo elegido de cada pregunta. Llevan --experiment-name mibici-equipo06 y --env-manager local por lo explicado arriba.
+
+P1 (demanda), HistGradientBoosting con 100 iteraciones:
+
+```
+mlflow run . -e train -P question=p1 -P model=hgb -P max_iter=100 --experiment-name mibici-equipo06 --env-manager local
+```
+
+P2 (riesgo), Random Forest con variables temporales, 100 árboles y profundidad máxima de 15. El comando lanza la búsqueda de cuatro combinaciones (una corrida padre y cuatro hijas) y el modelo elegido es la hija de 100 árboles y profundidad máxima de 15:
+
+```
+mlflow run . -e train -P question=p2 -P model=rf-features-search --experiment-name mibici-equipo06 --env-manager local
+```
+
+P3 (grupos), KMeans con tres clusters y 10 inicializaciones:
+
+```
+mlflow run . -e train -P question=p3 -P model=kmeans -P n_clusters=3 --experiment-name mibici-equipo06 --env-manager local
+```
+
+El baseline de cada pregunta se lanza con -P model=baseline en P1 y P2, y en P3 con el mismo comando sin n_clusters, que toma 4 por defecto.
 
 ### Servidor de tracking
 
