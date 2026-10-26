@@ -2,6 +2,7 @@ import argparse
 
 import mlflow
 import pandas as pd
+from mlflow.models import infer_signature
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -120,6 +121,17 @@ def correr_run(nombre, modelo, params, datos, version_datos,model_family,stage_o
 
         # Versión de los datos: manifiesto de la ingesta y conjunto de entrenamiento
         mlflow.log_artifact(config.MANIFEST_PATH, artifact_path="data")
+
+        # Configuración de la corrida y modelo con firma y ejemplo de entrada
+        mlflow.log_artifact("mibici/config.py", artifact_path="config")
+        signature = infer_signature(X_train, modelo.predict(X_train))
+        mlflow.sklearn.log_model(
+            sk_model=modelo,
+            name="model",
+            signature=signature,
+            input_example=X_train.head(5),
+            skops_trusted_types=["sklearn.tree._tree.Tree"],
+        )
         train_df = pd.concat([X_train, y_train], axis=1)
         dataset = mlflow.data.from_pandas(
             train_df, source=str(config.PROCESSED_DATA_DIR), name="p2-train", targets="riesgo"
