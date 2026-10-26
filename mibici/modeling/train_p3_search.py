@@ -176,6 +176,10 @@ def registrar_trial(
             index=False,
         )
 
+        X_modelo = perfil[
+            VARIABLES_BASELINE
+        ].copy()
+
         with RunMLflow(
             pregunta="P3",
             nombre_run=nombre_run,
@@ -201,6 +205,22 @@ def registrar_trial(
                 "train_silhouette": silhouette,
                 "train_davies_bouldin": davies_bouldin,
             })
+
+            run.log_model(
+                model=modelo,
+                X_sample=X_modelo,
+                artifact_path="model",
+            )
+
+            run.registrar_artefacto(
+                config.MANIFEST_PATH,
+                dir_remoto="data",
+            )
+
+            run.log_config(
+                config_path="mibici/config.py",
+                artifact_path="config",
+            )
 
             run.registrar_artefacto(
                 ruta_modelo
