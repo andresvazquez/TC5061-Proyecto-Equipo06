@@ -282,10 +282,6 @@ Cada integrante participa tanto como autor de Pull Requests como revisor de cont
 
 En el proyecto se aplicaron las siguientes buenas prácticas de ingeniería y MLOps:
 
-### MLflow Tracking
-- **Seguimiento centralizado:** Se utiliza una clase común `RunMLflow` (`mibici/modeling/tracking.py`) que estandariza la creación de experimentos, registro de hiperparámetros, métricas de desempeño y guardado de artefactos.
-- **Trazabilidad y artefactos:** Cada corrida registra parámetros del modelo, métricas de validación y prueba, artefactos visuales y la serialización del modelo dentro del servidor local de MLflow (`mlflow.db`).
-
 ### Estructura y código
 - **Arquitectura modular:** El código fuente se organiza como un paquete ejecutable (`mibici/`) instalado en modo editable (`pip install -e .`), permitiendo importaciones limpias entre módulos.
 - **Configuración centralizada:** Todas las rutas, variables globales y ventanas de división temporal (`INICIO_VALIDACION`, `INICIO_PRUEBA`) se gestionan exclusivamente en `mibici/config.py`.
@@ -295,6 +291,36 @@ En el proyecto se aplicaron las siguientes buenas prácticas de ingeniería y ML
 - **Versionado de datos con manifiesto:** Los datasets brutos y procesados no se rastrean en Git por su tamaño. Su versionado se garantiza mediante `references/data_manifest.csv`, que registra las URLs, el conteo de registros y el hash SHA-256 de cada archivo.
 - **Estrategia de branching y PRs:** La rama `main` está protegida. Todo cambio requiere una rama propia, seguir la convención de [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/), una revisión aprobada por otro integrante del equipo y fusión mediante *Squash Merge*.
 - **Aislamiento de entorno:** Uso de `.gitignore` para excluir datos pesados (`data/raw/`, `data/processed/`), artefactos locales (`mlruns/`, `mlartifacts/`) y entornos virtuales (`.venv/`).
+
+### MLflow Tracking
+- **Seguimiento centralizado:** Se utiliza una clase común `RunMLflow` (`mibici/modeling/tracking.py`) que estandariza la creación de experimentos, registro de hiperparámetros, métricas de desempeño y guardado de artefactos.
+- **Trazabilidad y artefactos:** Cada corrida registra parámetros del modelo, métricas de validación y prueba, artefactos visuales y la serialización del modelo dentro del servidor local de MLflow (`mlflow.db`).
+- **Esquema de Gestión del Ciclo de Vida del Modelo:** Para la promoción a producción de los modelos del proyecto, el equipo acordó utilizar el **esquema vigente de Aliases (`@champion`)** en lugar del esquema tradicional basado en etapas (*Stages: Staging / Production*).
+
+#### Justificación de la Elección del Esquema de Aliases:
+1. **Alineación con Estándares Modernos de MLflow:** A partir de MLflow 2.0+, el sistema clásico de *Stages* ha sido marcado como en desuso (*deprecated*). MLflow recomienda la adopción de *Aliases* para la gobernanza de modelos.
+2. **Desacoplamiento y Flexibilidad:** Los *Aliases* permiten asignar identificadores mutables (como `@champion` para el modelo en servicio) a versiones específicas e inmutables del registro (`Version 1`), facilitando despliegues continuos sin alterar el historial de versiones.
+3. **Carga Programática Directa:** Permite que los scripts de inferencia o servicios de producción consuman la versión vigente del modelo mediante una URI estable: `models:/mibici-equipo06-p1-demanda@champion`.
+
+#### Verificación de Carga Programática del Modelo Champion:
+Se validó la capacidad de resolver y cargar el modelo *Champion* directamente desde el registro mediante el servidor local:
+
+  ```python
+  import os
+  import mlflow
+
+  # Incrementar tiempo de espera HTTP y definir Tracking URI
+  os.environ["MLFLOW_HTTP_REQUEST_TIMEOUT"] = "300"
+  mlflow.set_tracking_uri("http://localhost:5000")
+
+  # Carga del modelo usando el esquema de alias
+  champion_uri = "models:/mibici-equipo06-p1-demanda@champion"
+  loaded_model = mlflow.sklearn.load_model(champion_uri)
+
+  print("Carga exitosa del modelo Champion:", type(loaded_model))
+  ```
+  
+Nota: "/mibici-equipo06-p1-demanda@champion" cambia de acuerdo con el modelo que quieras verificar
 
 ## Integrantes y roles
 
