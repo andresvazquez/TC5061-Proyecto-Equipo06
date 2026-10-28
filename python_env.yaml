@@ -23,3 +23,8 @@ dependencies:
   - requests==2.32.3
   - beautifulsoup4==4.13.4
   - seaborn==0.13.2
+  - pytest==9.2.0
+  - deepchecks==0.19.1
+  - bandit==1.9.4
+  - pip-audit==2.10.1
+  - setuptools==81.0.0
