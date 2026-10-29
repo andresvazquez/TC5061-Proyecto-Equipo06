@@ -233,11 +233,7 @@ def test_generar_manifiesto_caso_limite_archivo_vacio(tmp_path, monkeypatch):
     ]
     assert version == calcular_hash(ruta_manifiesto)
 
-
-# -----------------------------------------------------------------------------
 # 5. Pruebas para listar_enlaces y descargas (sin red)
-# -----------------------------------------------------------------------------
-
 def test_listar_enlaces_caso_normal(monkeypatch):
     """Caso Normal: Extrae y ordena los enlaces CSV dentro del rango solicitado."""
     monkeypatch.setattr(config, "PORTAL_URL", "https://mibici.test/")
