@@ -70,6 +70,20 @@ def partir_por_fecha(malla):
     return entrenamiento, validacion, prueba
 
 
+def parametros_bosque(n_estimators, max_depth):
+    # Parámetros del bosque de P2, con más peso a la clase de riesgo
+    return {
+        "n_estimators": n_estimators,
+        "max_depth": max_depth,
+        "class_weight": {
+            0: 0.1,
+            1: 0.9,
+        },
+        "n_jobs": -1,
+        "random_state": config.SEMILLA,
+    }
+
+
 def evaluar(modelo, X, y, nombre, prefijo):
     # Métricas del conjunto (val o test), su curva precision-recall y su matriz de confusión
     yhat = modelo.predict(X)
@@ -233,16 +247,7 @@ def main():
 
     # Candidato: bosque aleatorio, con más peso a la clase de riesgo
     if args.model in ("rf", "all"):
-        params = {
-            "n_estimators": args.n_estimators,
-            "max_depth": args.max_depth,
-            "class_weight": {
-                0: 0.1,
-                1: 0.9,
-            },
-            "n_jobs": -1,
-            "random_state": config.SEMILLA,
-        }
+        params = parametros_bosque(args.n_estimators, args.max_depth)
 
         candidato = RandomForestClassifier(
             **params
