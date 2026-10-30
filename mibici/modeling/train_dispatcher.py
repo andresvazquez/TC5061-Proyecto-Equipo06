@@ -1,5 +1,5 @@
 import argparse
-import subprocess
+import subprocess  # nosec B404
 import sys
 
 MODELOS_VALIDOS = {
@@ -185,7 +185,8 @@ def main():
         " ".join(comando),
     )
 
-    subprocess.run(
+    # Comando formado por sys.executable y una lista fija de argumentos.
+    subprocess.run(  # nosec B603
         comando,
         check=True,
     )

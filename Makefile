@@ -39,6 +39,11 @@ format:
 	ruff check --fix
 	ruff format
 
+## Run security checks with Bandit
+.PHONY: security
+security:
+	$(PYTHON_INTERPRETER) -m bandit -c pyproject.toml -r mibici
+
 
 
 
