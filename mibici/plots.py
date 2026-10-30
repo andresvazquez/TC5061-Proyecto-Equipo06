@@ -16,6 +16,14 @@ def graficar_matriz_confusion(modelo, X, y, ruta):
     matriz.figure_.savefig(ruta)
     plt.close(matriz.figure_)
 
+
+def graficar_matriz_confusion_umbral(y, yhat, ruta):
+    # Matriz de confusión con las predicciones que salen del umbral elegido
+    matriz = ConfusionMatrixDisplay.from_predictions(y, yhat)
+    matriz.figure_.savefig(ruta)
+    plt.close(matriz.figure_)
+
+
 def graficar_real_vs_predicho(y_real, y_pred, ruta):
     """
     Genera un gráfico de dispersión entre valores reales y predichos (P1)

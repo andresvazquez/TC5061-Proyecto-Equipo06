@@ -257,6 +257,18 @@ Al terminar, en el experimento mibici-equipo06 quedan 5 runs: Baseline_P1_Lag168
 
 Con la versión de datos 723b4c4628046549dce640dabba90372588f9ea49fc882fecee42a5e1afedd7a se espera, en P1, un val_mae de 0.7738 en el baseline y de 0.6348 en el candidato; en P2, un recall de validación de 0.8853 en el random forest (el baseline no detecta riesgo); y en P3, una silueta de 0.5985 y un Davies-Bouldin de 0.5064.
 
+### Registro del modelo elegido
+
+Con el servidor de tracking arriba, el modelo elegido de cada pregunta se registra en el Model Registry con mibici/modeling/registry.py. Se le pasa la pregunta y el ID de la corrida ganadora, que se ve en la interfaz de MLflow:
+
+```
+python -m mibici.modeling.registry --question p1 --run-id <run_id>
+```
+
+Registra el modelo con su descripción, su linaje (corrida, experimento, commit de Git y versión de los datos) y el alias champion. En el registro quedan mibici-equipo06-p1-demanda, mibici-equipo06-p2-riesgo y mibici-equipo06-p3-grupos, y cada uno se carga con models:/<nombre>@champion.
+
+En P2 la corrida también guarda el umbral de las alertas de riesgo (parámetro umbral) y las métricas con ese umbral, con el sufijo _umbral, junto con las falsas alarmas. El umbral es el más alto con el que el recall de validación todavía llega a RECALL_MINIMO de mibici/config.py (0.85), para reducir las falsas alarmas sin dejar de detectar las estaciones en riesgo. El modelo registrado predice con 0.5, así que para usar el umbral se aplica predict_proba >= umbral, y el valor se guarda como etiqueta umbral en la versión registrada.
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests
