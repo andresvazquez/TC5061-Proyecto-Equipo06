@@ -257,6 +257,49 @@ Al terminar, en el experimento mibici-equipo06 quedan 5 runs: Baseline_P1_Lag168
 
 Con la versión de datos 723b4c4628046549dce640dabba90372588f9ea49fc882fecee42a5e1afedd7a se espera, en P1, un val_mae de 0.7738 en el baseline y de 0.6348 en el candidato; en P2, un recall de validación de 0.8853 en el random forest (el baseline no detecta riesgo); y en P3, una silueta de 0.5985 y un Davies-Bouldin de 0.5064.
 
+### Validación de datos con DeepChecks
+
+Los chequeos de calidad de datos se ejecutan con:
+
+`python -m mibici.deepchecks_report`
+
+El análisis reutiliza la malla y la partición temporal de P2 definida en el proyecto. Se evalúan los conjuntos reales de entrenamiento y prueba mediante los siguientes checks de DeepChecks:
+
+- `PercentOfNulls`: porcentaje de valores faltantes.
+- `MixedDataTypes`: detección de columnas con tipos mezclados.
+- `DataDuplicates`: detección de filas duplicadas.
+- `FeatureDrift`: comparación de las distribuciones de las variables entre entrenamiento y prueba.
+- `LabelDrift`: comparación de la distribución de la etiqueta `riesgo` entre entrenamiento y prueba.
+
+Para los checks de drift se utiliza una muestra reproducible de 100,000 filas de entrenamiento y 100,000 filas de prueba, utilizando la semilla centralizada en `config.SEMILLA`.
+
+La ejecución genera los resultados en `reports/deepchecks/`. El resumen cuantitativo se almacena en:
+
+`reports/deepchecks/resumen_deepchecks.json`
+
+Los reportes HTML permiten inspeccionar visualmente los resultados de integridad y drift.
+
+#### Resultados sobre los datos reales
+
+La ejecución se realizó sobre 11,424,960 filas de entrenamiento y 1,015,680 filas de prueba.
+
+En las variables analizadas no se detectaron valores faltantes, filas duplicadas ni columnas con tipos mixtos en entrenamiento o prueba.
+
+Los drift scores observados para las variables numéricas fueron:
+
+- `inventario_previo`: 0.05108
+- `razon_inventario`: 0.07505
+- `saldo_1h`: 0.03136
+- `saldo_3h`: 0.05239
+- `salidas_hora_previa`: 0.06318
+- `llegadas_hora_previa`: 0.06288
+
+La variable con mayor drift observado fue `razon_inventario`, con 0.07505. La comparación se realizó mediante la estadística Kolmogorov-Smirnov reportada por DeepChecks.
+
+Para la etiqueta `riesgo`, DeepChecks reportó un drift score de 0.03144 mediante Cramer's V.
+
+Estos resultados no mostraron problemas de integridad en las variables analizadas y los cambios de distribución observados entre entrenamiento y prueba fueron menores que los utilizados en las pruebas automatizadas para representar escenarios de drift alto.
+
 ### Registro del modelo elegido
 
 Con el servidor de tracking arriba, el modelo elegido de cada pregunta se registra en el Model Registry con mibici/modeling/registry.py. Se le pasa la pregunta y el ID de la corrida ganadora, que se ve en la interfaz de MLflow:
