@@ -131,6 +131,19 @@ Y para verificar la instalación:
 ```bash
 python -c "import mibici; print(mibici.__name__)"
 ```
+
+### Variables de entorno
+
+La configuración local se puede ajustar con un archivo `.env` en la raíz del proyecto. Para crearlo a partir de la plantilla:
+
+```bash
+cp .env.example .env
+```
+
+En PowerShell se puede usar `Copy-Item .env.example .env`. El archivo `.env` está incluido en `.gitignore` por lo que no se sube a Git. Si no existe, el proyecto usa los valores por defecto de `mibici/config.py`. No agregues credenciales reales a `.env.example`.
+
+La variable principal es `MLFLOW_TRACKING_URI`, que define la dirección del servidor de tracking (por defecto `http://localhost:5000`). Se puede sobrescribir desde `.env` o desde el entorno antes de ejecutar los comandos.
+
 ## Comandos
 
 ### Ingesta de datos
