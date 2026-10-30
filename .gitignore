@@ -171,6 +171,13 @@ venv.bak/
 .env.*
 !.env.example
 
+# Claves y credenciales
+*.pem
+*.key
+id_rsa*
+credentials*.json
+secrets*.json
+
 # Spyder project settings
 .spyderproject
 .spyproject
