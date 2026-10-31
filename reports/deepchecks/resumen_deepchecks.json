@@ -1,0 +1,60 @@
+{
+  "filas": {
+    "train": 11424960,
+    "test": 1015680,
+    "train_drift_sample": 100000,
+    "test_drift_sample": 100000
+  },
+  "percent_nulls_train": {
+    "estacion_id": 0.0,
+    "inventario_previo": 0.0,
+    "razon_inventario": 0.0,
+    "saldo_1h": 0.0,
+    "saldo_3h": 0.0,
+    "salidas_hora_previa": 0.0,
+    "llegadas_hora_previa": 0.0
+  },
+  "percent_nulls_test": {
+    "estacion_id": 0.0,
+    "inventario_previo": 0.0,
+    "razon_inventario": 0.0,
+    "saldo_1h": 0.0,
+    "saldo_3h": 0.0,
+    "salidas_hora_previa": 0.0,
+    "llegadas_hora_previa": 0.0
+  },
+  "duplicate_ratio_train": 0.0,
+  "duplicate_ratio_test": 0.0,
+  "mixed_types_train": {},
+  "mixed_types_test": {},
+  "feature_drift": {
+    "inventario_previo": {
+      "drift_score": 0.051080000000000014,
+      "method": "Kolmogorov-Smirnov"
+    },
+    "razon_inventario": {
+      "drift_score": 0.07505,
+      "method": "Kolmogorov-Smirnov"
+    },
+    "saldo_1h": {
+      "drift_score": 0.03136,
+      "method": "Kolmogorov-Smirnov"
+    },
+    "saldo_3h": {
+      "drift_score": 0.05239000000000002,
+      "method": "Kolmogorov-Smirnov"
+    },
+    "salidas_hora_previa": {
+      "drift_score": 0.06318000000000001,
+      "method": "Kolmogorov-Smirnov"
+    },
+    "llegadas_hora_previa": {
+      "drift_score": 0.06287999999999994,
+      "method": "Kolmogorov-Smirnov"
+    }
+  },
+  "label_drift": {
+    "drift_score": 0.03143865512908623,
+    "method": "Cramer's V"
+  }
+}
