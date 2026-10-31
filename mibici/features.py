@@ -21,7 +21,7 @@ def _suma_previa(malla, columna, horas):
         datos = malla[malla["estacion_id"] == estacion].sort_values("hora")
         valores = datos[columna].values
 
-        sumas = [np.nan] * horas
+        sumas = [np.nan] * min(horas, len(valores))
         for i in range(horas, len(valores)):
             sumas.append(sum(valores[i - horas : i]))
 
