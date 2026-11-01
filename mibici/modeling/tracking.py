@@ -1,13 +1,13 @@
+import os
 from pathlib import Path
-import subprocess
+import shutil
+import subprocess  # nosec B404
 
 import mlflow
-import mlflow.sklearn
 from mlflow.models import infer_signature
+import mlflow.sklearn
 
 from mibici import config
-
-import os
 
 
 def obtener_git_commit():
@@ -21,9 +21,14 @@ def obtener_git_commit():
         str: Hash corto del commit actual o "unknown" si no
         puede obtenerse.
     """
+    git_path = shutil.which("git")
+    if git_path is None:
+        return "unknown"
+
     try:
-        resultado = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
+        # Lista de argumentos y check=True; no se usa shell=True.
+        resultado = subprocess.run(  # nosec B603
+            [git_path, "rev-parse", "--short", "HEAD"],
             capture_output=True,
             text=True,
             check=True,
@@ -131,7 +136,7 @@ class RunMLflow:
         """
         mlflow.log_metrics(metricas)
 
-    def registrar_artefacto(self, ruta, dir_remoto: str = None):
+    def registrar_artefacto(self, ruta, dir_remoto: str | None = None):
         """
         Registra un archivo como artefacto del run.
 

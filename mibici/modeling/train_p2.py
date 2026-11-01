@@ -6,7 +6,7 @@ from mlflow.models import infer_signature
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import f1_score, precision_recall_curve, precision_score, recall_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 
@@ -14,7 +14,11 @@ from mibici import config
 from mibici.dataset import calcular_hash
 from mibici.features import construir_malla, etiqueta_riesgo, features_p2,agregar_features_temporales_p2
 from mibici.modeling.tracking import obtener_git_commit
-from mibici.plots import graficar_curva_pr, graficar_matriz_confusion
+from mibici.plots import (
+    graficar_curva_pr,
+    graficar_matriz_confusion,
+    graficar_matriz_confusion_umbral,
+)
 
 # P2: baseline y modelo candidato registrados en MLflow
 
@@ -84,7 +88,13 @@ def parametros_bosque(n_estimators, max_depth):
     }
 
 
-def evaluar(modelo, X, y, nombre, prefijo):
+def elegir_umbral(modelo, X, y, recall_minimo):
+    # Umbral más alto de la validación con el que el recall todavía llega al mínimo
+    _, recall, umbrales = precision_recall_curve(y, modelo.predict_proba(X)[:, 1])
+    return umbrales[recall[:-1] >= recall_minimo].max()
+
+
+def evaluar(modelo, X, y, nombre, prefijo, umbral=None):
     # Métricas del conjunto (val o test), su curva precision-recall y su matriz de confusión
     yhat = modelo.predict(X)
     ruta_pr = config.FIGURES_DIR / f"{nombre}_{prefijo}_pr.png"
@@ -95,20 +105,43 @@ def evaluar(modelo, X, y, nombre, prefijo):
         f"{prefijo}_recall": recall_score(y, yhat),
         f"{prefijo}_f1": f1_score(y, yhat),
         f"{prefijo}_pr_auc": graficar_curva_pr(modelo, X, y, nombre, ruta_pr),
+        f"{prefijo}_falsas_alarmas": int(((yhat == 1) & (y == 0)).sum()),
     }
     graficar_matriz_confusion(modelo, X, y, ruta_matriz)
-    return metricas, [ruta_pr, ruta_matriz]
+    figuras = [ruta_pr, ruta_matriz]
+
+    # Mismas métricas con el umbral elegido en validación, para reducir las falsas alarmas
+    if umbral is not None:
+        yhat_umbral = (modelo.predict_proba(X)[:, 1] >= umbral).astype(int)
+        ruta_matriz_umbral = config.FIGURES_DIR / f"{nombre}_{prefijo}_cm_umbral.png"
+        metricas.update(
+            {
+                f"{prefijo}_precision_umbral": precision_score(y, yhat_umbral),
+                f"{prefijo}_recall_umbral": recall_score(y, yhat_umbral),
+                f"{prefijo}_f1_umbral": f1_score(y, yhat_umbral),
+                f"{prefijo}_falsas_alarmas_umbral": int(((yhat_umbral == 1) & (y == 0)).sum()),
+            }
+        )
+        graficar_matriz_confusion_umbral(y, yhat_umbral, ruta_matriz_umbral)
+        figuras.append(ruta_matriz_umbral)
+    return metricas, figuras
 
 
-def correr_run(nombre, modelo, params, datos, version_datos,model_family,stage_of_work,nested=False,):
+def correr_run(nombre, modelo, params, datos, version_datos,model_family,stage_of_work,nested=False,recall_minimo=None):
     # Entrena el modelo y registra el run en MLflow
     X_train, y_train, X_val, y_val, X_test, y_test = datos
 
     with mlflow.start_run(run_name=nombre,nested=nested):
         modelo.fit(X_train, y_train)
 
-        metricas, figuras_val = evaluar(modelo, X_val, y_val, nombre, "val")
-        metricas_test, figuras_test = evaluar(modelo, X_test, y_test, nombre, "test")
+        # El umbral se elige en validación y se mide en prueba
+        umbral = None
+        if recall_minimo is not None:
+            umbral = elegir_umbral(modelo, X_val, y_val, recall_minimo)
+            mlflow.log_params({"recall_minimo": recall_minimo, "umbral": umbral})
+
+        metricas, figuras_val = evaluar(modelo, X_val, y_val, nombre, "val", umbral)
+        metricas_test, figuras_test = evaluar(modelo, X_test, y_test, nombre, "test", umbral)
         metricas.update(metricas_test)
 
         mlflow.log_params(
@@ -261,6 +294,7 @@ def main():
             version_datos,
             model_family="random_forest",
             stage_of_work="candidate",
+            recall_minimo=config.RECALL_MINIMO,
         )
 
     # Candidato: regresión logística con las variables escaladas y el mismo peso de clases
@@ -287,6 +321,7 @@ def main():
             version_datos,
             model_family="logistic_regression",
             stage_of_work="candidate",
+            recall_minimo=config.RECALL_MINIMO,
         )
 
     # Búsqueda de hiperparámetros del bosque: un run padre y un run hijo por combinación
@@ -327,6 +362,7 @@ def main():
                     model_family="random_forest",
                     stage_of_work="search",
                     nested=True,
+                    recall_minimo=config.RECALL_MINIMO,
                 )
     if args.model in ("rf-features-search", "all"):
         param_grid = [
@@ -376,6 +412,7 @@ def main():
                     model_family="random_forest",
                     stage_of_work="search",
                     nested=True,
+                    recall_minimo=config.RECALL_MINIMO,
                 )
 
 

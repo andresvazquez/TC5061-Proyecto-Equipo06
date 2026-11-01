@@ -35,6 +35,9 @@ EXPERIMENTO = "mibici-equipo06"
 # Semilla de los modelos
 SEMILLA = 42
 
+# P2: recall mínimo en validación para elegir el umbral de las alertas de riesgo
+RECALL_MINIMO = 0.85
+
 # Dónde empiezan la validación y la prueba (antes de la validación es entrenamiento)
 INICIO_VALIDACION = "2026-04-01"
 INICIO_PRUEBA = "2026-07-01"
