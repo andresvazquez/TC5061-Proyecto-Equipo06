@@ -33,16 +33,18 @@ Para asegurar este punto se realizó una revisión del árbol de trabajo y del h
 ```bash
 # Archivos versionados con nombres sensibles
 git ls-files | grep -Ei '(^|/)(\.env|mlflow\.db|mlruns|mlartifacts|data/)|credential|secret|token|\.pem|\.p12|id_rsa'
-# No hay coincidencias, esto nos indica que esta correcto.
+# La única coincidencia esperada es .env.example, que se versiona a propósito.
 
 # Contenido con asignaciones o formatos de credenciales
 git grep -nEI "(password|passwd|secret|token|api[_-]?key|private[_-]?key)[[:space:]]*[:=][[:space:]]*[\"']?[^\"'[:space:]]{6,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36,}|-----BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY-----" -- .
-# No hay coincidencias, esto nos indica que esta correcto.
+# No hay coincidencias; .env.example no contiene secretos.
 
 # Archivos sensibles en el historial
 git log --all --format='%h %s' -- .env '.env.*' mlflow.db mlruns mlartifacts
-# No se encontraron commits de estos archivos por lo que tambien esta correcto
+# Los únicos commits esperados son los que agregaron .env.example.
 ```
+
+La única coincidencia esperada es `.env.example`, que se versiona a propósito y solo contiene valores ficticios. Por eso aparece en la lista de archivos y en el historial de Git; no se encontraron credenciales ni otros archivos sensibles.
 
 También se verificó el comportamiento de `.gitignore`:
 | Ruta | Resultado |
