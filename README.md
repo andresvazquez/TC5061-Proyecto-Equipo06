@@ -362,6 +362,8 @@ pytest -k deepchecks                 # validación de datos con DeepChecks
 | `tests/modeling/` | Entrenamiento y reproducibilidad: misma semilla, mismos resultados |
 | `tests/test_deepchecks_*.py` | Base común de DeepChecks y revisión de nulos, tipos de datos, duplicados y drift entre entrenamiento y prueba |
 
+![Resultado de pytest](docs/capturas/pytest.png)
+
 ## Chequeos de seguridad
 
 ### Instalación de las herramientas
