@@ -279,6 +279,17 @@ La ejecución genera los resultados en `reports/deepchecks/`. El resumen cuantit
 
 Los reportes HTML permiten inspeccionar visualmente los resultados de integridad y drift.
 
+#### Problemas inyectados en las pruebas
+
+Las pruebas de `tests/test_deepchecks_*.py` trabajan con tablas pequeñas. A cada tabla se le mete a propósito un problema para comprobar que el chequeo lo detecta, y se repite con la tabla limpia para confirmar que ahí no avisa de nada. Esto es lo que se prueba en cada caso:
+
+- `data_integrity`: se le pide una etiqueta que no existe en la tabla y DeepChecks lanza `DeepchecksValueError`. Con la etiqueta correcta, la suite corre y regresa sus resultados.
+- `DataDuplicates`: se repiten 10 filas. La proporción de duplicados sale como 10 entre el total de filas, y en la tabla limpia sale 0. La condición de cero duplicados pasa en la limpia y falla con las repetidas.
+- `MixedDataTypes`: se crea una columna con la mitad de los valores como texto y la otra mitad como números, y el chequeo reporta esa mezcla. Con solo 5 % de texto, la condición de que el texto quede entre 1 % y 10 % no pasa.
+- `PercentOfNulls`: se ponen 5 valores `NaN` en `saldo_1h` y la proporción detectada es 5 entre el total de filas. La condición de cero nulos pasa en la tabla limpia y falla con un solo `NaN`.
+- `MixedNulls`: se crea una columna con un `NaN` y un valor escrito como `"null"`, y el chequeo encuentra las dos formas de marcar un faltante, con dos registros en total.
+- `FeatureDrift` y `LabelDrift`: se desplaza una variable (media 0 en entrenamiento y 5 en prueba) y se cambia la etiqueta (de 50 % a 90 % de riesgo). Con distribuciones iguales el drift score es 0, y con las alteradas sale mayor que 0.2. La condición de umbral 0.2 pasa sin drift y falla con drift.
+
 #### Resultados sobre los datos reales
 
 La ejecución se realizó sobre 11,424,960 filas de entrenamiento y 1,015,680 filas de prueba.
