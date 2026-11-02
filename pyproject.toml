@@ -31,5 +31,5 @@ known-first-party = ["mibici"]
 force-sort-within-sections = true
 
 [tool.bandit]
-exclude_dirs = [".venv", "tests", "notebooks", "data", "mlruns", "mlartifacts"]
+exclude_dirs = [".venv", "tests", "notebooks", "data/", "mlruns", "mlartifacts"]
 
