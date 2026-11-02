@@ -312,6 +312,82 @@ Registra el modelo con su descripción, su linaje (corrida, experimento, commit 
 
 En P2 la corrida también guarda el umbral de las alertas de riesgo (parámetro umbral) y las métricas con ese umbral, con el sufijo _umbral, junto con las falsas alarmas. El umbral es el más alto con el que el recall de validación todavía llega a RECALL_MINIMO de mibici/config.py (0.85), para reducir las falsas alarmas sin dejar de detectar las estaciones en riesgo. El modelo registrado predice con 0.5, así que para usar el umbral se aplica predict_proba >= umbral, y el valor se guarda como etiqueta umbral en la versión registrada.
 
+## Pruebas automatizadas
+
+Todas las pruebas del proyecto se ejecutan con un solo comando, desde la raíz del repositorio y con el entorno virtual activo:
+
+```bash
+pytest
+```
+
+Pytest encuentra solo los archivos `test_*.py` dentro de `tests/`. No necesita la carpeta `data/` (está en `.gitignore`): las pruebas crean sus propias tablas pequeñas dentro del código. Al terminar, todas deben aparecer como `passed`.
+
+Para correr solo una parte:
+
+```bash
+pytest tests/test_features.py        # feature engineering
+pytest tests/test_utilidades.py      # utilidades: dispatcher y tracking
+pytest tests/modeling                # entrenamiento y reproducibilidad
+pytest -k deepchecks                 # validación de datos con DeepChecks
+```
+
+| Archivo | Qué verifica |
+|---|---|
+| `tests/test_features.py` | Funciones de `mibici/features.py`: malla estación por hora, etiqueta de riesgo, variables de P2, rezagos y perfil de uso |
+| `tests/test_utilidades.py` | `validar_modelo`, `construir_comando` y `parse_args` (dispatcher) y `obtener_git_commit` (tracking) |
+| `tests/test_dataset.py` | Descarga, normalización y manifiesto de datos |
+| `tests/modeling/` | Entrenamiento y reproducibilidad: misma semilla, mismos resultados |
+| `tests/test_deepchecks_*.py` | Base común de DeepChecks y revisión de nulos, tipos de datos, duplicados y drift entre entrenamiento y prueba |
+
+## Chequeos de seguridad
+
+### Instalación de las herramientas
+
+`pip-audit` y `bandit` ya están en `requirements.txt`, así que se instalan con el resto de las dependencias, con el entorno virtual activo:
+
+```bash
+pip install -r requirements.txt
+```
+
+Para comprobar que quedaron instaladas:
+
+```bash
+pip-audit --version
+python -m bandit --version
+```
+
+### Auditoría de dependencias con pip-audit
+
+Revisa las librerías de `requirements.txt` contra una base pública de vulnerabilidades conocidas:
+
+```bash
+pip-audit -r requirements.txt
+```
+
+Termina con código `1` si encuentra alguna vulnerabilidad y con `0` si no hay ninguna. Para guardar el reporte (`-f` indica el formato y `-o` el archivo de salida):
+
+```bash
+mkdir -p reports/security
+pip-audit -r requirements.txt -f json -o reports/security/pip_audit.json
+```
+
+La línea `mibici ... could not be audited` es normal: es el paquete local (`-e .`), que no está en PyPI.
+
+### Análisis de código con bandit
+
+Busca patrones inseguros en el código de `mibici/`, salvo los directorios excluidos en la sección `[tool.bandit]` de `pyproject.toml`:
+
+```bash
+python -m bandit -c pyproject.toml -r mibici
+```
+
+Para guardar la salida:
+
+```bash
+mkdir -p reports/security
+python -m bandit -c pyproject.toml -r mibici -f json -o reports/security/bandit.json
+```
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests

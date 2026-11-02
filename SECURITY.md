@@ -68,3 +68,13 @@ Si se detecta una credencial en el repositorio o en su historial necesitamos seg
 3. Coordinar con el equipo antes de reescribir el historial de Git. La limpieza
    del historial requiere `git filter-repo` y un `push --force` coordinado.
 4. Documentar el incidente y la rotación sin incluir el valor expuesto.
+
+## Supresiones de bandit
+
+Se desactivan B404 (import de subprocess) y B603 (subprocess.run) en
+mibici/modeling/tracking.py y mibici/modeling/train_dispatcher.py porque
+ejecutan comandos controlados por el propio proyecto para obtener el commit de
+Git y construir el comando de entrenamiento, sin entrada externa. El aviso
+B607 (ejecutable sin ruta completa) se corrigió resolviendo la ruta de git
+con shutil.which. El resto del código se analiza sin supresiones; el reporte
+vigente está en reports/security/bandit.json.
