@@ -385,6 +385,10 @@ pip-audit -r requirements.txt -f json -o reports/security/pip_audit.json
 
 La línea `mibici ... could not be audited` es normal: es el paquete local (`-e .`), que no está en PyPI.
 
+La siguiente captura muestra la ejecución de `pip-audit`. Solo reporta `setuptools`, que se mantiene en 81.0.0 porque `deepchecks` 0.19.1 necesita `pkg_resources` para importarse y las versiones corregidas de `setuptools` ya no lo incluyen.
+
+![Resultado de pip-audit](docs/capturas/pip_audit.png)
+
 ### Análisis de código con bandit
 
 Busca patrones inseguros en el código de `mibici/`, salvo los directorios excluidos en la sección `[tool.bandit]` de `pyproject.toml`:
@@ -399,6 +403,10 @@ Para guardar la salida:
 mkdir -p reports/security
 python -m bandit -c pyproject.toml -r mibici -f json -o reports/security/bandit.json
 ```
+
+La siguiente captura muestra la ejecución de `bandit` sobre `mibici/`, sin hallazgos:
+
+![Resultado de bandit](docs/capturas/bandit.png)
 
 ## Flujo de trabajo con Git
 
