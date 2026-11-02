@@ -337,7 +337,7 @@ pytest -k deepchecks                 # validación de datos con DeepChecks
 | `tests/test_utilidades.py` | `validar_modelo`, `construir_comando` y `parse_args` (dispatcher) y `obtener_git_commit` (tracking) |
 | `tests/test_dataset.py` | Descarga, normalización y manifiesto de datos |
 | `tests/modeling/` | Entrenamiento y reproducibilidad: misma semilla, mismos resultados |
-| `tests/test_deepchecks_*.py` | Nulos, tipos de datos, duplicados y drift entre entrenamiento y prueba |
+| `tests/test_deepchecks_*.py` | Base común de DeepChecks y revisión de nulos, tipos de datos, duplicados y drift entre entrenamiento y prueba |
 
 ## Chequeos de seguridad
 
@@ -387,6 +387,7 @@ Para guardar la salida:
 mkdir -p reports/security
 python -m bandit -c pyproject.toml -r mibici -f json -o reports/security/bandit.json
 ```
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests
