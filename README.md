@@ -300,6 +300,18 @@ Para la etiqueta `riesgo`, DeepChecks reportó un drift score de 0.03144 mediant
 
 Estos resultados no mostraron problemas de integridad en las variables analizadas y los cambios de distribución observados entre entrenamiento y prueba fueron menores que los utilizados en las pruebas automatizadas para representar escenarios de drift alto.
 
+#### Evidencia de ejecución
+
+Las siguientes capturas muestran el análisis de drift temporal generado por DeepChecks sobre los conjuntos reales de entrenamiento y prueba.
+
+![Análisis de drift temporal con DeepChecks](docs/capturas/deepchecks_drift_1.png)
+
+![Análisis de drift temporal con DeepChecks](docs/capturas/deepchecks_drift_2.png)
+
+![Análisis de drift temporal con DeepChecks](docs/capturas/deepchecks_drift_3.png)
+
+La visualización compara las distribuciones de entrenamiento y prueba. Entre las variables analizadas, `razon_inventario` presentó el mayor drift score observado, con `0.07505`.
+
 ### Registro del modelo elegido
 
 Con el servidor de tracking arriba, el modelo elegido de cada pregunta se registra en el Model Registry con mibici/modeling/registry.py. Se le pasa la pregunta y el ID de la corrida ganadora, que se ve en la interfaz de MLflow:
