@@ -21,4 +21,6 @@ deepchecks==0.19.1
 bandit==1.9.4
 pip-audit==2.10.1
 setuptools==81.0.0
+fastapi[standard]==0.146.0
+pydantic==2.14.1
 -e .
