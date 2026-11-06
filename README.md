@@ -48,6 +48,12 @@ Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excl
 ```
 TC5061-Proyecto-Equipo06/
 ├── .venv/              <- Entorno virtual local (ignorado en Git)
+├── app/                <- API REST con FastAPI para servir el modelo
+│   ├── __init__.py
+│   ├── main.py         <- Aplicación FastAPI y endpoint POST /predict
+│   ├── modelo.py       <- Carga del modelo desde el Model Registry de MLflow
+│   ├── prediccion.py   <- Función predecir que ejecuta el modelo
+│   └── schemas.py      <- Esquema de entrada con Pydantic (PrediccionEntrada)
 ├── data/
 │   ├── external/       <- Datos de fuentes de terceros
 │   ├── interim/        <- Datos intermedios transformados
