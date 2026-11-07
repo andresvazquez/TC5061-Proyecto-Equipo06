@@ -98,7 +98,7 @@ TC5061-Proyecto-Equipo06/
 Para configurar el entorno de desarrollo y ejecutar los componentes del proyecto desde un clon limpio del repositorio, sigue estos pasos:
 
 ### Pre-requisitos
-- **Python 3.10** o superior instalado en el sistema.
+- **Python 3.13** o superior instalado en el sistema.
 - **Git** instalado.
 
 ---
