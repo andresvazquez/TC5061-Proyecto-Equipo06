@@ -247,6 +247,40 @@ Esto crea mlflow.db en la raíz (está en .gitignore, no se sube a Git) y deja l
 export MLFLOW_TRACKING_URI=http://localhost:5000
 ```
 
+### Levantar el contenedor de la API
+
+La API carga el modelo champion desde el Model Registry, así que el contenedor necesita llegar al servidor de tracking de la máquina. Dentro del contenedor localhost es el propio contenedor, por eso la dirección del registry se pasa con la variable de entorno MLFLOW_TRACKING_URI y apunta a host.containers.internal.
+
+1. Levantar el servidor de tracking con el comando de abajo, en una terminal aparte. MLflow responde 403 (Invalid Host header) a los hosts que no están en --allowed-hosts, y esa lista reemplaza a la que trae por defecto, por eso también incluye localhost y 127.0.0.1:
+
+```
+mlflow server --backend-store-uri sqlite:///mlflow.db --port 5000 --allowed-hosts "localhost:*,127.0.0.1:*,host.containers.internal:*"
+```
+
+2. Levantar el contenedor con la imagen mibici-api, publicando el puerto 8000 y con la dirección del registry:
+
+```
+podman run -d --name mibici-api -p 8000:8000 -e MLFLOW_TRACKING_URI=http://host.containers.internal:5000 mibici-api
+```
+
+3. Confirmar que el contenedor está corriendo y que cargó el modelo. Si falla, el error aparece en los logs:
+
+```
+podman ps -a
+podman logs mibici-api
+```
+
+4. Abrir http://127.0.0.1:8000/docs para probar POST /predict desde Swagger UI.
+
+Para volver a levantarlo con el mismo nombre primero se elimina el contenedor anterior:
+
+```
+podman stop mibici-api
+podman rm mibici-api
+```
+
+Con Docker son los mismos comandos cambiando podman por docker.
+
 ### Experimento base
 
 Con los datos ya descargados (sección anterior), el entorno virtual activo y desde la raíz del proyecto, primero se levanta MLflow en otra terminal:
