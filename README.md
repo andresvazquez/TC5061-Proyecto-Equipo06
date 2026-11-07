@@ -279,7 +279,7 @@ podman stop mibici-api
 podman rm mibici-api
 ```
 
-Con Docker son los mismos comandos cambiando podman por docker.
+Con Docker la secuencia es la misma cambiando podman por docker, pero host.containers.internal es la dirección del host en Podman. Para Docker hay que verificar la dirección equivalente en su documentación antes de usar el mismo valor en MLFLOW_TRACKING_URI.
 
 ### Experimento base
 
