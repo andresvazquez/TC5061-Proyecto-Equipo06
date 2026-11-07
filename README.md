@@ -43,11 +43,10 @@ Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excl
 
 ## Estructura de carpetas
 
-## Estructura de carpetas
-
 ```
 TC5061-Proyecto-Equipo06/
 ├── .venv/              <- Entorno virtual local (ignorado en Git)
+├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI)
 ├── app/                <- API REST con FastAPI para servir el modelo
 │   ├── __init__.py
 │   ├── main.py         <- Aplicación FastAPI y endpoint POST /predict
@@ -65,15 +64,21 @@ TC5061-Proyecto-Equipo06/
 │   ├── __init__.py
 │   ├── config.py       <- Variables globales, rutas e intervalos de fechas 
 │   ├── dataset.py      <- Ingesta, limpieza, normalización y generación del manifiesto
+│   ├── deepchecks_report.py <- Chequeos de validación de datos con DeepChecks
 │   ├── features.py     <- Creacion de funciones para entrenamiento de los 3 modelos
+│   ├── plots.py        <- Gráficas de evaluación de los modelos
 │   └── modeling/       
 │       ├── __init__.py
 │       ├── predict.py  <- Código para inferencia de modelos
+│       ├── registry.py <- Registro del modelo elegido en el Model Registry con el alias champion
 │       ├── tracking.py <- Clase RunMLflow para trazabilidad centralizada de experimentos
 │       ├── train.py    <- Script base de entrenamiento (no usado)
+│       ├── train_dispatcher.py <- Entry point train del MLproject: elige el script según la pregunta y el modelo
 │       ├── train_p1.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P1)
 │       ├── train_p2.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P2)
-│       └── train_p3.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P3)
+│       ├── train_p3.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P3)
+│       ├── train_p3_search.py <- Búsqueda de hiperparámetros de P3
+│       └── train_p3_stability.py <- Estabilidad de los grupos de P3
 │
 ├── mlartifacts/        <- Almacenamiento local de artefactos de MLflow (modelos, gráficas)
 ├── mlruns/             <- Registro local de ejecuciones y experimentos de MLflow
@@ -81,14 +86,20 @@ TC5061-Proyecto-Equipo06/
 ├── notebooks/          <- Notebooks de exploración inicial y validación
 ├── references/         <- Manifiesto de datos (data_manifest.csv) y referencias técnicas
 ├── reports/            <- Reportes generados y gráficas/artefactos de evaluación
-│   └── figures/
+│   ├── deepchecks/
+│   ├── figures/
+│   └── security/       <- Reporte de pip-audit
+├── tests/              <- Pruebas automatizadas con pytest
 │
 ├── .gitignore          <- Reglas para ignorar datos pesados, entornos y carpetas locales
 ├── Makefile           <- Comandos automatizados para el ciclo de vida del proyecto
+├── MLproject           <- MLflow Project con los entry points ingest y train
 ├── mlflow.db           <- Base de datos local para el tracking server de MLflow
 ├── pyproject.toml      <- Configuración del paquete mibici y herramientas del entorno
+├── python_env.yaml     <- Entorno que usa mlflow run (Python 3.13 y dependencias)
 ├── README.md           <- Guía principal de uso y documentación
-└── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
+├── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
+└── SECURITY.md         <- Reglas de seguridad y manejo de credenciales
 ```
 
 --------
