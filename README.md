@@ -43,11 +43,10 @@ Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excl
 
 ## Estructura de carpetas
 
-## Estructura de carpetas
-
 ```
 TC5061-Proyecto-Equipo06/
 ├── .venv/              <- Entorno virtual local (ignorado en Git)
+├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI)
 ├── app/                <- API REST con FastAPI para servir el modelo
 │   ├── __init__.py
 │   ├── main.py         <- Aplicación FastAPI y endpoint POST /predict
@@ -65,15 +64,21 @@ TC5061-Proyecto-Equipo06/
 │   ├── __init__.py
 │   ├── config.py       <- Variables globales, rutas e intervalos de fechas 
 │   ├── dataset.py      <- Ingesta, limpieza, normalización y generación del manifiesto
+│   ├── deepchecks_report.py <- Chequeos de validación de datos con DeepChecks
 │   ├── features.py     <- Creacion de funciones para entrenamiento de los 3 modelos
+│   ├── plots.py        <- Gráficas de evaluación de los modelos
 │   └── modeling/       
 │       ├── __init__.py
 │       ├── predict.py  <- Código para inferencia de modelos
+│       ├── registry.py <- Registro del modelo elegido en el Model Registry con el alias champion
 │       ├── tracking.py <- Clase RunMLflow para trazabilidad centralizada de experimentos
 │       ├── train.py    <- Script base de entrenamiento (no usado)
+│       ├── train_dispatcher.py <- Entry point train del MLproject: elige el script según la pregunta y el modelo
 │       ├── train_p1.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P1)
 │       ├── train_p2.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P2)
-│       └── train_p3.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P3)
+│       ├── train_p3.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P3)
+│       ├── train_p3_search.py <- Búsqueda de hiperparámetros de P3
+│       └── train_p3_stability.py <- Estabilidad de los grupos de P3
 │
 ├── mlartifacts/        <- Almacenamiento local de artefactos de MLflow (modelos, gráficas)
 ├── mlruns/             <- Registro local de ejecuciones y experimentos de MLflow
@@ -81,14 +86,20 @@ TC5061-Proyecto-Equipo06/
 ├── notebooks/          <- Notebooks de exploración inicial y validación
 ├── references/         <- Manifiesto de datos (data_manifest.csv) y referencias técnicas
 ├── reports/            <- Reportes generados y gráficas/artefactos de evaluación
-│   └── figures/
+│   ├── deepchecks/
+│   ├── figures/
+│   └── security/       <- Reporte de pip-audit
+├── tests/              <- Pruebas automatizadas con pytest
 │
 ├── .gitignore          <- Reglas para ignorar datos pesados, entornos y carpetas locales
 ├── Makefile           <- Comandos automatizados para el ciclo de vida del proyecto
+├── MLproject           <- MLflow Project con los entry points ingest y train
 ├── mlflow.db           <- Base de datos local para el tracking server de MLflow
 ├── pyproject.toml      <- Configuración del paquete mibici y herramientas del entorno
+├── python_env.yaml     <- Entorno que usa mlflow run (Python 3.13 y dependencias)
 ├── README.md           <- Guía principal de uso y documentación
-└── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
+├── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
+└── SECURITY.md         <- Reglas de seguridad y manejo de credenciales
 ```
 
 --------
@@ -98,7 +109,7 @@ TC5061-Proyecto-Equipo06/
 Para configurar el entorno de desarrollo y ejecutar los componentes del proyecto desde un clon limpio del repositorio, sigue estos pasos:
 
 ### Pre-requisitos
-- **Python 3.10** o superior instalado en el sistema.
+- **Python 3.13** o superior instalado en el sistema.
 - **Git** instalado.
 
 ---
@@ -235,6 +246,40 @@ Esto crea mlflow.db en la raíz (está en .gitignore, no se sube a Git) y deja l
 ```
 export MLFLOW_TRACKING_URI=http://localhost:5000
 ```
+
+### Levantar el contenedor de la API
+
+La API carga el modelo champion desde el Model Registry, así que el contenedor necesita llegar al servidor de tracking de la máquina. Dentro del contenedor localhost es el propio contenedor, por eso la dirección del registry se pasa con la variable de entorno MLFLOW_TRACKING_URI y apunta a host.containers.internal.
+
+1. Levantar el servidor de tracking con el comando de abajo, en una terminal aparte. MLflow responde 403 (Invalid Host header) a los hosts que no están en --allowed-hosts, y esa lista reemplaza a la que trae por defecto, por eso también incluye localhost y 127.0.0.1:
+
+```
+mlflow server --backend-store-uri sqlite:///mlflow.db --port 5000 --allowed-hosts "localhost:*,127.0.0.1:*,host.containers.internal:*"
+```
+
+2. Levantar el contenedor con la imagen mibici-api, publicando el puerto 8000 y con la dirección del registry:
+
+```
+podman run -d --name mibici-api -p 8000:8000 -e MLFLOW_TRACKING_URI=http://host.containers.internal:5000 mibici-api
+```
+
+3. Confirmar que el contenedor está corriendo y que cargó el modelo. Si falla, el error aparece en los logs:
+
+```
+podman ps -a
+podman logs mibici-api
+```
+
+4. Abrir http://127.0.0.1:8000/docs para probar POST /predict desde Swagger UI.
+
+Para volver a levantarlo con el mismo nombre primero se elimina el contenedor anterior:
+
+```
+podman stop mibici-api
+podman rm mibici-api
+```
+
+Con Docker la secuencia es la misma cambiando podman por docker, pero host.containers.internal es la dirección del host en Podman. Para Docker hay que verificar la dirección equivalente en su documentación antes de usar el mismo valor en MLFLOW_TRACKING_URI.
 
 ### Experimento base
 
