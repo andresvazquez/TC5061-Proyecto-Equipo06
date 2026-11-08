@@ -305,6 +305,28 @@ podman rm mibici-api
 
 Con Docker la secuencia es la misma cambiando podman por docker, pero host.containers.internal es la dirección del host en Podman. Para Docker hay que verificar la dirección equivalente en su documentación antes de usar el mismo valor en MLFLOW_TRACKING_URI.
 
+### Ejemplo de petición y respuesta
+
+Con el contenedor en ejecución, se envía una estación de ejemplo con las nueve variables que usa el modelo de P2:
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"inventario_previo": 5, "razon_inventario": 0.25, "saldo_1h": -2, "saldo_3h": -4, "salidas_hora_previa": 6, "llegadas_hora_previa": 4, "hora_dia": 8, "dia_semana": 1, "es_fin_semana": 0}'
+```
+
+La API respondió HTTP 200 con:
+
+```json
+{"prediccion":1.0,"modelo":"mibici-equipo06-p2-riesgo","alias":"champion","version":"1"}
+```
+
+`prediccion=1.0` indica que el modelo clasificó la estación como en riesgo durante la siguiente hora. Los campos `modelo`, `alias` y `version` confirman que la respuesta proviene de `mibici-equipo06-p2-riesgo@champion`, versión 1 del Model Registry.
+
+En Windows, ejecutar el comando desde Git Bash/WSL o usar `curl.exe`; en PowerShell `curl` es un alias de `Invoke-WebRequest`.
+
+![Respuesta de la API desde el contenedor](docs/capturas/api_contenedor_predict.png)
+
 ### Estrategia de despliegue
 
 Se eligió inferencia en tiempo real (predicción en línea): la API recibe en un POST las variables de una estación y responde de inmediato. La pregunta de P2 es sobre el riesgo en la siguiente hora, así que se necesita el dato del momento, y una predicción por lotes generada con anticipación podría quedar desactualizada. Empaquetar el servicio en un contenedor reduce las diferencias entre entornos y facilita un despliegue reproducible.
