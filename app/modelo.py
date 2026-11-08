@@ -1,4 +1,5 @@
 import mlflow
+from loguru import logger
 
 from mibici import config
 
@@ -23,4 +24,8 @@ def cargar_modelo():
     )
 
 
-modelo = cargar_modelo()
+try:
+    modelo = cargar_modelo()
+except Exception as error:
+    logger.error(f"No se pudo cargar el modelo: {error}")
+    modelo = None
