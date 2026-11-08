@@ -1,16 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PrediccionEntrada(BaseModel):
-    inventario_previo: float
-    razon_inventario: float
+    inventario_previo: float = Field(ge=0)
+    razon_inventario: float = Field(ge=0, le=1)
     saldo_1h: float
     saldo_3h: float
-    salidas_hora_previa: float
-    llegadas_hora_previa: float
-    hora_dia: int
-    dia_semana: int
-    es_fin_semana: int
+    salidas_hora_previa: float = Field(ge=0)
+    llegadas_hora_previa: float = Field(ge=0)
+    hora_dia: int = Field(ge=0, le=23)
+    dia_semana: int = Field(ge=0, le=6)
+    es_fin_semana: int = Field(ge=0, le=1)
+
 
 class PrediccionSalida(BaseModel):
     prediccion: int | float

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from mlflow.tracking import MlflowClient
 
 from app.modelo import MODEL_ALIAS, MODEL_NAME, modelo
@@ -9,8 +9,10 @@ app = FastAPI()
 
 
 # El esquema valida el JSON y la función predecir devuelve la predicción
-@app.post("/predict")
+@app.post("/predict", response_model=PrediccionSalida)
 def predict(entrada: PrediccionEntrada):
+    if modelo is None:
+        raise HTTPException(status_code=503, detail="Modelo no disponible")
     return PrediccionSalida(
         prediccion=predecir(modelo, entrada),
         modelo=MODEL_NAME,
