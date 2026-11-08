@@ -11,3 +11,9 @@ class PrediccionEntrada(BaseModel):
     hora_dia: int
     dia_semana: int
     es_fin_semana: int
+
+class PrediccionSalida(BaseModel):
+    prediccion: int | float
+    modelo: str
+    alias: str
+    version: str | None = None
