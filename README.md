@@ -247,6 +247,30 @@ Esto crea mlflow.db en la raíz (está en .gitignore, no se sube a Git) y deja l
 export MLFLOW_TRACKING_URI=http://localhost:5000
 ```
 
+### Construir la imagen de la API
+
+Con Podman instalado y desde la raíz del repositorio, la imagen de la API se construye con:
+
+```bash
+podman build -t mibici-api -f Containerfile .
+```
+
+Para comprobar que la imagen se creó correctamente:
+
+```bash
+podman images
+```
+
+La imagen debe aparecer con el nombre:
+
+```text
+localhost/mibici-api:latest
+```
+
+El `Containerfile` utiliza Python 3.13, instala las dependencias definidas en `requirements.txt`, incluye los paquetes `mibici/` y `app/`, expone el puerto 8000 y ejecuta FastAPI en modo de producción.
+
+La imagen no contiene una copia fija del modelo. Al iniciar el contenedor, la API obtiene `mibici-equipo06-p2-riesgo@champion` desde MLflow Model Registry utilizando el servidor configurado mediante `MLFLOW_TRACKING_URI`.
+
 ### Levantar el contenedor de la API
 
 La API carga el modelo champion desde el Model Registry, así que el contenedor necesita llegar al servidor de tracking de la máquina. Dentro del contenedor localhost es el propio contenedor, por eso la dirección del registry se pasa con la variable de entorno MLFLOW_TRACKING_URI y apunta a host.containers.internal.
@@ -254,7 +278,7 @@ La API carga el modelo champion desde el Model Registry, así que el contenedor 
 1. Levantar el servidor de tracking con el comando de abajo, en una terminal aparte. MLflow responde 403 (Invalid Host header) a los hosts que no están en --allowed-hosts, y esa lista reemplaza a la que trae por defecto, por eso también incluye localhost y 127.0.0.1:
 
 ```
-mlflow server --backend-store-uri sqlite:///mlflow.db --port 5000 --allowed-hosts "localhost:*,127.0.0.1:*,host.containers.internal:*"
+mlflow server --backend-store-uri sqlite:///mlflow.db --host 0.0.0.0 --port 5000 --allowed-hosts "localhost:*,127.0.0.1:*,host.containers.internal:*"
 ```
 
 2. Levantar el contenedor con la imagen mibici-api, publicando el puerto 8000 y con la dirección del registry:
