@@ -305,6 +305,10 @@ podman rm mibici-api
 
 Con Docker la secuencia es la misma cambiando podman por docker, pero host.containers.internal es la dirección del host en Podman. Para Docker hay que verificar la dirección equivalente en su documentación antes de usar el mismo valor en MLFLOW_TRACKING_URI.
 
+### Estrategia de despliegue
+
+Se eligió inferencia en tiempo real (predicción en línea): la API recibe en un POST las variables de una estación y responde de inmediato. La pregunta de P2 es sobre el riesgo en la siguiente hora, así que se necesita el dato del momento, y una predicción por lotes generada con anticipación podría quedar desactualizada. Empaquetar el servicio en un contenedor reduce las diferencias entre entornos y facilita un despliegue reproducible.
+
 ### Experimento base
 
 Con los datos ya descargados (sección anterior), el entorno virtual activo y desde la raíz del proyecto, primero se levanta MLflow en otra terminal:
