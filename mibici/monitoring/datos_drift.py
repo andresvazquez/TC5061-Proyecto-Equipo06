@@ -34,3 +34,9 @@ def conjunto_referencia():
     # Datos de entrenamiento: junio de 2023 a marzo de 2026
     entrenamiento, _, _ = partir_por_fecha(_malla_base())
     return _muestrear(_preparar(entrenamiento))
+
+
+def conjunto_actual():
+    # Datos de prueba: julio a septiembre de 2026
+    _, _, prueba = partir_por_fecha(_malla_base())
+    return _muestrear(_preparar(prueba))
