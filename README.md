@@ -426,7 +426,7 @@ La visualización compara las distribuciones de entrenamiento y prueba. Entre la
 
 ### Monitoreo de drift
 
-La API (`app/main.py` y `app/prediccion.py`) no registra las peticiones que recibe: el endpoint `POST /predict` solo devuelve la predicción y no guarda las entradas. Por eso el conjunto actual no sale de registros de la API, sino de los datos abiertos de MiBici.
+Para el monitoreo con Evidently se necesita un conjunto actual que represente el comportamiento en producción. La API (`app/main.py` y `app/prediccion.py`) no registra las peticiones que recibe: el endpoint `POST /predict` devuelve la predicción junto con el modelo, el alias y la versión, y no guarda las entradas. Por eso el conjunto actual no sale de registros de la API, sino de los datos abiertos de MiBici.
 
 ### Registro del modelo elegido
 
