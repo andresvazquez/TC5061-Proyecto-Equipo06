@@ -424,6 +424,10 @@ Las siguientes capturas muestran el análisis de drift temporal generado por Dee
 
 La visualización compara las distribuciones de entrenamiento y prueba. Entre las variables analizadas, `razon_inventario` presentó el mayor drift score observado, con `0.07505`.
 
+### Monitoreo de drift
+
+La API (`app/main.py` y `app/prediccion.py`) no registra las peticiones que recibe: el endpoint `POST /predict` solo devuelve la predicción y no guarda las entradas. Por eso el conjunto actual no sale de registros de la API, sino de los datos abiertos de MiBici.
+
 ### Registro del modelo elegido
 
 Con el servidor de tracking arriba, el modelo elegido de cada pregunta se registra en el Model Registry con mibici/modeling/registry.py. Se le pasa la pregunta y el ID de la corrida ganadora, que se ve en la interfaz de MLflow:
