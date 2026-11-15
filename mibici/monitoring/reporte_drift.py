@@ -53,6 +53,8 @@ def guardar_reporte_calidad(snapshot):
     carpeta.mkdir(parents=True, exist_ok=True)
     ruta = carpeta / "calidad_datos.html"
     snapshot.save_html(str(ruta))
+    ruta_json = carpeta / "calidad_datos.json"
+    ruta_json.write_text(snapshot.json(), encoding="utf-8")
     return ruta
 
 
