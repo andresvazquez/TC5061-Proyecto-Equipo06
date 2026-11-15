@@ -31,3 +31,27 @@ def test_champion_si_el_challenger_no_llega_al_recall_minimo():
     challenger = {"recall": 0.80, "falsas_alarmas": 500}
     version, _ = decidir_version(CHAMPION, challenger)
     assert version == "champion"
+
+
+def test_champion_si_el_recall_baja_aunque_bajen_las_falsas_alarmas():
+    challenger = {"recall": 0.895, "falsas_alarmas": 940}
+    version, _ = decidir_version(CHAMPION, challenger)
+    assert version == "champion"
+
+
+def test_challenger_gana_en_la_frontera_de_recall_de_0_01():
+    challenger = {"recall": 0.91, "falsas_alarmas": 1050}
+    version, _ = decidir_version(CHAMPION, challenger)
+    assert version == "challenger"
+
+
+def test_challenger_gana_en_la_frontera_de_falsas_alarmas_del_5_por_ciento():
+    challenger = {"recall": 0.90, "falsas_alarmas": 950}
+    version, _ = decidir_version(CHAMPION, challenger)
+    assert version == "challenger"
+
+
+def test_champion_si_las_falsas_alarmas_bajan_menos_del_5_por_ciento():
+    challenger = {"recall": 0.90, "falsas_alarmas": 951}
+    version, _ = decidir_version(CHAMPION, challenger)
+    assert version == "champion"

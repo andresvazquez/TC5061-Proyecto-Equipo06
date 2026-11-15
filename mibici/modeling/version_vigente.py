@@ -18,11 +18,18 @@ def decidir_version(champion, challenger):
 
     # Mejora el recall sin subir de forma importante las falsas alarmas
     if diferencia_recall >= DIFERENCIA_RECALL and challenger["falsas_alarmas"] <= limite_sube:
-        return "challenger", "el challenger mejora el recall sin subir de forma importante las falsas alarmas"
+        return (
+            "challenger",
+            "el challenger mejora el recall sin subir de forma importante las falsas alarmas",
+        )
 
-    # Empata en recall y baja de forma importante las falsas alarmas
-    if abs(diferencia_recall) < DIFERENCIA_RECALL and challenger["falsas_alarmas"] <= limite_baja:
-        return "challenger", "el challenger empata en recall y baja de forma importante las falsas alarmas"
+    # Empata en recall (no baja y sube menos que la mínima) y baja de forma importante las falsas alarmas
+    empata = 0 <= diferencia_recall < DIFERENCIA_RECALL
+    if empata and challenger["falsas_alarmas"] <= limite_baja:
+        return (
+            "challenger",
+            "el challenger empata en recall y baja de forma importante las falsas alarmas",
+        )
 
     # En cualquier otro caso la diferencia es ruido y se queda el champion
     return "champion", "la diferencia no alcanza la mínima y se trata como ruido"
