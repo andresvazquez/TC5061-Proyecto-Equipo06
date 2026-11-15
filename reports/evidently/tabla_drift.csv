@@ -1,0 +1,11 @@
+variable,metodo,score,umbral,drift
+razon_inventario,Wasserstein distance (normed),0.07754532738482019,0.1,False
+inventario_previo,Wasserstein distance (normed),0.05985654301370293,0.1,False
+saldo_1h,Wasserstein distance (normed),0.05935741256327966,0.1,False
+saldo_3h,Wasserstein distance (normed),0.05860833608700843,0.1,False
+salidas_hora_previa,Wasserstein distance (normed),0.05547644449409003,0.1,False
+llegadas_hora_previa,Wasserstein distance (normed),0.05452332883403825,0.1,False
+riesgo,Jensen-Shannon distance,0.02231472125283301,0.1,False
+dia_semana,Wasserstein distance (normed),0.011959952302192404,0.1,False
+hora_dia,Wasserstein distance (normed),0.005659285250910623,0.1,False
+es_fin_semana,Jensen-Shannon distance,0.001923251728759389,0.1,False
