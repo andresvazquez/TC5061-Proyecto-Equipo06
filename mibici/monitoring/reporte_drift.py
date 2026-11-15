@@ -1,6 +1,7 @@
 from evidently import DataDefinition, Dataset, Report
-from evidently.presets import DataDriftPreset
+from evidently.presets import DataDriftPreset, DataSummaryPreset
 
+from mibici import config
 from mibici.monitoring.datos_drift import conjunto_actual, conjunto_referencia
 
 DEFINICION = DataDefinition(
@@ -41,10 +42,29 @@ def ejecutar_reporte(presets=None):
     return reporte.run(actual, referencia)
 
 
+def ejecutar_reporte_calidad():
+    actual, referencia = crear_datasets()
+    reporte = Report([DataSummaryPreset()], include_tests=True)
+    return reporte.run(actual, referencia)
+
+
+def guardar_reporte_calidad(snapshot):
+    carpeta = config.REPORTS_DIR / "evidently"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    ruta = carpeta / "calidad_datos.html"
+    snapshot.save_html(str(ruta))
+    ruta_json = carpeta / "calidad_datos.json"
+    ruta_json.write_text(snapshot.json(), encoding="utf-8")
+    return ruta
+
+
 def main():
     snapshot = ejecutar_reporte()
     for metrica in snapshot.dict()["metrics"]:
         print(metrica["metric_name"], metrica["value"])
+
+    ruta = guardar_reporte_calidad(ejecutar_reporte_calidad())
+    print(f"Reporte de calidad guardado en {ruta}")
 
 
 if __name__ == "__main__":
