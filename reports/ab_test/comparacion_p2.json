@@ -1,0 +1,20 @@
+{
+  "filas_evaluadas": 100000,
+  "modelo_registrado": "mibici-equipo06-p2-riesgo",
+  "resultados": {
+    "champion": {
+      "precision": 0.3274451939291737,
+      "recall": 0.9084210526315789,
+      "f1": 0.4813758909203595,
+      "pr_auc": 0.633232918396759,
+      "falsas_alarmas": 15953
+    },
+    "challenger": {
+      "precision": 0.3309564474807857,
+      "recall": 0.9065497076023392,
+      "f1": 0.4848920863309353,
+      "pr_auc": 0.6340849951468748,
+      "falsas_alarmas": 15669
+    }
+  }
+}
