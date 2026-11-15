@@ -44,7 +44,7 @@ def ejecutar_reporte(presets=None):
 
 def ejecutar_reporte_calidad():
     actual, referencia = crear_datasets()
-    reporte = Report([DataSummaryPreset()], include_tests="True")
+    reporte = Report([DataSummaryPreset()], include_tests=True)
     return reporte.run(actual, referencia)
 
 
