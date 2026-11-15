@@ -4,6 +4,12 @@ from evidently.presets import DataDriftPreset, DataSummaryPreset
 from mibici import config
 from mibici.monitoring.datos_drift import conjunto_actual, conjunto_referencia
 
+REPORTES_DIR = config.REPORTS_DIR / "evidently"
+
+RUTA_HTML = REPORTES_DIR / "data_drift.html"
+
+RUTA_JSON = REPORTES_DIR / "data_drift.json"
+
 DEFINICION = DataDefinition(
     numerical_columns=[
         "inventario_previo",
@@ -42,6 +48,20 @@ def ejecutar_reporte(presets=None):
     return reporte.run(actual, referencia)
 
 
+def guardar_reporte(snapshot):
+    """
+    Guarda el reporte de Data Drift en HTML y JSON.
+    """
+    REPORTES_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    snapshot.save_html(str(RUTA_HTML))
+
+    snapshot.save_json(str(RUTA_JSON))
+
+
 def ejecutar_reporte_calidad():
     actual, referencia = crear_datasets()
     reporte = Report([DataSummaryPreset()], include_tests=True)
@@ -60,11 +80,30 @@ def guardar_reporte_calidad(snapshot):
 
 def main():
     snapshot = ejecutar_reporte()
+
+    guardar_reporte(snapshot)
+
     for metrica in snapshot.dict()["metrics"]:
-        print(metrica["metric_name"], metrica["value"])
+        print(
+            metrica["metric_name"],
+            metrica["value"],
+        )
+
+    print()
+    print(
+        "Reporte HTML:",
+        RUTA_HTML,
+    )
+    print(
+        "Reporte JSON:",
+        RUTA_JSON,
+    )
 
     ruta = guardar_reporte_calidad(ejecutar_reporte_calidad())
-    print(f"Reporte de calidad guardado en {ruta}")
+    print(
+        "Reporte de calidad guardado en",
+        ruta,
+    )
 
 
 if __name__ == "__main__":
