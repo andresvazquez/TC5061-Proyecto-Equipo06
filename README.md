@@ -432,8 +432,8 @@ Para el monitoreo con Evidently se necesita un conjunto actual que represente el
 
 | Conjunto | Fechas | Filas del periodo | Muestra en el reporte | De dónde sale |
 |---|---|---|---|---|
-| Referencia | 2023-06 a 2026-03 (`hora < INICIO_VALIDACION`) | 11,186,940 | 100,000 | `conjunto_referencia()` |
-| Actual | 2026-07 a 2026-09 (`hora >= INICIO_PRUEBA`) | 994,520 | 100,000 | `conjunto_actual()` |
+| Referencia | 2023-06 a 2026-03 (`hora < INICIO_VALIDACION`) | 11,424,960 | 100,000 | `conjunto_referencia()` |
+| Actual | 2026-07 a 2026-09 (`hora >= INICIO_PRUEBA`) | 1,015,680 | 100,000 | `conjunto_actual()` |
 
 **Por qué estos periodos.** La referencia es el periodo con el que se entrenó el modelo registrado (`mibici-equipo06-p2-riesgo`), así que representa los datos que el modelo conoce. El actual es el trimestre posterior más reciente de los datos abiertos: es posterior al entrenamiento y a la validación (2026-04 a 2026-06), y el modelo no lo vio al entrenar. Es el periodo de prueba de `config.py`, de modo que el A/B testing de P2 usa el mismo conjunto. Los periodos no se escogieron para que salga drift ni se cambiaron al ver los resultados: el reporte se lee tal como sale.
 
