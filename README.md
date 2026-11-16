@@ -430,7 +430,7 @@ Para el monitoreo con Evidently se necesita un conjunto actual que represente el
 
 **Periodos elegidos.** Antes de generar el reporte se definieron los dos conjuntos que se comparan, a partir de los cortes de `mibici/config.py`. Ambos son de la malla estación por hora de P2 (`mibici/monitoring/datos_drift.py`) y salen de los datos abiertos de MiBici ya procesados en `data/processed`:
 
-| Conjunto | Fechas | Filas del periodo | Muestra en el reporte | De dónde sale |
+| Conjunto | Fechas | Filas del periodo (antes del muestreo) | Filas en el reporte (muestra) | De dónde sale |
 |---|---|---|---|---|
 | Referencia | 2023-06 a 2026-03 (`hora < INICIO_VALIDACION`) | 11,424,960 | 100,000 | `conjunto_referencia()` |
 | Actual | 2026-07 a 2026-09 (`hora >= INICIO_PRUEBA`) | 1,015,680 | 100,000 | `conjunto_actual()` |
