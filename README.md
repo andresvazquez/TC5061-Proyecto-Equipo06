@@ -440,6 +440,38 @@ Registra el modelo con su descripción, su linaje (corrida, experimento, commit 
 
 En P2 la corrida también guarda el umbral de las alertas de riesgo (parámetro umbral) y las métricas con ese umbral, con el sufijo _umbral, junto con las falsas alarmas. El umbral es el más alto con el que el recall de validación todavía llega a RECALL_MINIMO de mibici/config.py (0.85), para reducir las falsas alarmas sin dejar de detectar las estaciones en riesgo. El modelo registrado predice con 0.5, así que para usar el umbral se aplica predict_proba >= umbral, y el valor se guarda como etiqueta umbral en la versión registrada.
 
+### Versión alternativa y A/B testing
+
+Para el monitoreo de P2 se entrena una segunda versión del modelo y se compara con la vigente. La versión alternativa es el mismo random forest del champion (100 árboles y profundidad máxima de 15), entrenado con los datos de junio de 2023 a junio de 2026, es decir, entrenamiento y validación juntos. Los datos de julio a septiembre de 2026 no entran al entrenamiento de ninguna de las dos versiones, porque con ellos se evalúa la comparación.
+
+Con el servidor de tracking arriba, se entrena y se registra como una nueva versión del mismo modelo, con el alias challenger. El alias champion no se mueve:
+
+```
+python -m mibici.modeling.train_p2_reentrenado
+python -m mibici.modeling.registry_challenger --run-id <run_id>
+```
+
+En un registro que solo tiene el modelo original, el champion queda en la versión 1 y el challenger en la versión 2.
+
+La comparación se corre con mibici/modeling/ab_test.py:
+
+```
+python -m mibici.modeling.ab_test
+```
+
+Carga las dos versiones por alias (models:/mibici-equipo06-p2-riesgo@champion y @challenger) y las evalúa con la misma muestra de 100,000 filas del periodo actual (julio a septiembre de 2026), prediciendo con el umbral de 0.5 en las dos. Calcula las mismas métricas que el entrenamiento (precisión, recall, F1, PR-AUC y falsas alarmas), las guarda en reports/ab_test/comparacion_p2.csv y comparacion_p2.json y registra la corrida en MLflow. Es una comparación champion y challenger sobre el mismo conjunto, no un reparto de tráfico real entre las versiones.
+
+La regla para decidir la versión vigente se fijó antes de correr la comparación y está en mibici/modeling/version_vigente.py. El recall decide y las falsas alarmas desempatan. Una versión solo puede quedar vigente si su recall es de al menos 0.85 (RECALL_MINIMO de mibici/config.py). La alternativa sustituye a la vigente si su recall la supera por 0.01 o más sin que las falsas alarmas suban más de 5 %, o si su recall no baja y sube menos de 0.01 mientras las falsas alarmas bajan 5 % o más. En cualquier otro caso la diferencia se trata como ruido y la versión vigente se queda.
+
+Resultados sobre julio a septiembre de 2026:
+
+| Versión | Alias | Precisión | Recall | F1 | PR-AUC | Falsas alarmas |
+|---|---|---|---|---|---|---|
+| 1 | champion | 0.3274 | 0.9084 | 0.4814 | 0.6332 | 15,953 |
+| 2 | challenger | 0.3310 | 0.9065 | 0.4849 | 0.6341 | 15,669 |
+
+El recall de la versión alternativa es 0.0019 menor que el de la vigente y sus falsas alarmas bajan 1.8 %, lejos del 5 %. Con la regla, el champion se queda como versión vigente y no se mueve ningún alias.
+
 ## Pruebas automatizadas
 
 Todas las pruebas del proyecto se ejecutan con un solo comando, desde la raíz del repositorio y con el entorno virtual activo:
