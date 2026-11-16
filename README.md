@@ -62,23 +62,32 @@ TC5061-Proyecto-Equipo06/
 ├── docs/               <- Documentación adicional del proyecto
 ├── mibici/             <- Paquete con el código fuente del proyecto
 │   ├── __init__.py
-│   ├── config.py       <- Variables globales, rutas e intervalos de fechas 
+│   ├── config.py       <- Variables globales, rutas e intervalos de fechas
 │   ├── dataset.py      <- Ingesta, limpieza, normalización y generación del manifiesto
 │   ├── deepchecks_report.py <- Chequeos de validación de datos con DeepChecks
-│   ├── features.py     <- Creacion de funciones para entrenamiento de los 3 modelos
+│   ├── features.py     <- Creación de funciones para entrenamiento de los 3 modelos
 │   ├── plots.py        <- Gráficas de evaluación de los modelos
-│   └── modeling/       
+│   ├── monitoring/     <- Monitoreo de calidad y drift con Evidently
+│   │   ├── __init__.py
+│   │   ├── datos_drift.py   <- Construcción de los conjuntos de referencia y actual
+│   │   ├── reporte_drift.py <- Reportes de Data Drift y calidad con Evidently
+│   │   └── tabla_drift.py   <- Resumen tabular de resultados de drift
+│   └── modeling/
 │       ├── __init__.py
+│       ├── ab_test.py  <- Comparación A/B entre champion y challenger de P2
 │       ├── predict.py  <- Código para inferencia de modelos
-│       ├── registry.py <- Registro del modelo elegido en el Model Registry con el alias champion
+│       ├── registry.py <- Registro del modelo elegido con el alias champion
+│       ├── registry_challenger.py <- Registro de la versión alternativa con alias challenger
 │       ├── tracking.py <- Clase RunMLflow para trazabilidad centralizada de experimentos
 │       ├── train.py    <- Script base de entrenamiento (no usado)
-│       ├── train_dispatcher.py <- Entry point train del MLproject: elige el script según la pregunta y el modelo
-│       ├── train_p1.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P1)
-│       ├── train_p2.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P2)
-│       ├── train_p3.py <- Script principal para entrenamiento, evaluación y registro en MLflow(P3)
+│       ├── train_dispatcher.py <- Entry point train del MLproject
+│       ├── train_p1.py <- Entrenamiento y evaluación de P1
+│       ├── train_p2.py <- Entrenamiento y evaluación de P2
+│       ├── train_p2_reentrenado.py <- Versión alternativa de P2 para el A/B testing
+│       ├── train_p3.py <- Entrenamiento y evaluación de P3
 │       ├── train_p3_search.py <- Búsqueda de hiperparámetros de P3
-│       └── train_p3_stability.py <- Estabilidad de los grupos de P3
+│       ├── train_p3_stability.py <- Estabilidad de los grupos de P3
+│       └── version_vigente.py <- Regla para decidir la versión vigente de P2
 │
 ├── mlartifacts/        <- Almacenamiento local de artefactos de MLflow (modelos, gráficas)
 ├── mlruns/             <- Registro local de ejecuciones y experimentos de MLflow
@@ -86,7 +95,16 @@ TC5061-Proyecto-Equipo06/
 ├── notebooks/          <- Notebooks de exploración inicial y validación
 ├── references/         <- Manifiesto de datos (data_manifest.csv) y referencias técnicas
 ├── reports/            <- Reportes generados y gráficas/artefactos de evaluación
+│   ├── ab_test/        <- Comparación Champion vs Challenger de P2
+│   │   ├── comparacion_p2.csv
+│   │   └── comparacion_p2.json
 │   ├── deepchecks/
+│   ├── evidently/      <- Reportes de monitoreo con Evidently
+│   │   ├── calidad_datos.html
+│   │   ├── calidad_datos.json
+│   │   ├── data_drift.html
+│   │   ├── data_drift.json
+│   │   └── tabla_drift.csv
 │   ├── figures/
 │   └── security/       <- Reporte de pip-audit
 ├── tests/              <- Pruebas automatizadas con pytest
