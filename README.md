@@ -428,6 +428,33 @@ La visualización compara las distribuciones de entrenamiento y prueba. Entre la
 
 Para el monitoreo con Evidently se necesita un conjunto actual que represente el comportamiento en producción. La API (`app/main.py` y `app/prediccion.py`) no registra las peticiones que recibe: el endpoint `POST /predict` devuelve la predicción junto con el modelo, el alias y la versión, y no guarda las entradas. Por eso el conjunto actual no sale de registros de la API, sino de los datos abiertos de MiBici.
 
+**Periodos elegidos.** Antes de generar el reporte se definieron los dos conjuntos que se comparan, a partir de los cortes de `mibici/config.py`. Ambos son de la malla estación por hora de P2 (`mibici/monitoring/datos_drift.py`) y salen de los datos abiertos de MiBici ya procesados en `data/processed`:
+
+| Conjunto | Fechas | Filas del periodo (antes del muestreo) | Filas en el reporte (muestra) | De dónde sale |
+|---|---|---|---|---|
+| Referencia | 2023-06 a 2026-03 (`hora < INICIO_VALIDACION`) | 11,424,960 | 100,000 | `conjunto_referencia()` |
+| Actual | 2026-07 a 2026-09 (`hora >= INICIO_PRUEBA`) | 1,015,680 | 100,000 | `conjunto_actual()` |
+
+**Por qué estos periodos.** La referencia es el periodo con el que se entrenó el modelo registrado (`mibici-equipo06-p2-riesgo`), así que representa los datos que el modelo conoce. El actual es el trimestre posterior más reciente de los datos abiertos: es posterior al entrenamiento y a la validación (2026-04 a 2026-06), y el modelo no lo vio al entrenar. Es el periodo de prueba de `config.py`, de modo que el A/B testing de P2 usa el mismo conjunto. Los periodos no se escogieron para que salga drift ni se cambiaron al ver los resultados: el reporte se lee tal como sale.
+
+**Muestreo.** Los dos periodos tienen cientos de miles o millones de filas, así que cada uno se muestrea con `df.sample(n=100_000, random_state=config.SEMILLA)` (`MUESTRA_DRIFT` en `datos_drift.py`). La semilla fija hace que salga la misma muestra en cada corrida. Es la misma regla que usa `mibici/deepchecks_report.py`.
+
+**Cómo correr el reporte.** Con el entorno activo y desde la raíz del proyecto:
+
+```bash
+python -m mibici.monitoring.reporte_drift
+```
+
+Genera en `reports/evidently/` dos reportes completos en HTML, que se abren en el navegador, junto con su JSON:
+- `data_drift.html` y `data_drift.json`: el drift por variable.
+- `calidad_datos.html` y `calidad_datos.json`: el resumen y los tests de calidad de los datos.
+
+**Qué contiene el reporte.** El de drift (`DataDriftPreset` de Evidently) compara cada variable del conjunto actual contra la de referencia. Para las numéricas usa la distancia de Wasserstein normalizada y para las categóricas (`es_fin_semana` y `riesgo`) la distancia de Jensen-Shannon, ambas con umbral de 0.1. Una variable tiene drift si su distancia alcanza o supera el umbral, y el dataset completo tiene drift si lo tiene al menos la mitad de las columnas (`drift_share=0.5`). Se analizan las 9 variables del modelo y la etiqueta `riesgo`.
+
+El de calidad (`DataSummaryPreset` con `include_tests`) resume cada columna y ejecuta tests automáticos sobre faltantes y estadísticas descriptivas, y complementa los chequeos de DeepChecks.
+
+En la corrida que está guardada en `reports/evidently/data_drift.json`, 0 de las 10 columnas superan el umbral de 0.1.
+
 ### Registro del modelo elegido
 
 Con el servidor de tracking arriba, el modelo elegido de cada pregunta se registra en el Model Registry con mibici/modeling/registry.py. Se le pasa la pregunta y el ID de la corrida ganadora, que se ve en la interfaz de MLflow:
