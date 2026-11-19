@@ -17,6 +17,8 @@ services:
       - "mlflow:*,localhost:*,127.0.0.1:*"
     ports:
       - "5000:5000"
+    networks:
+      - mibici
     volumes:
       - ./mlflow.db:/app/mlflow.db
       - ./mlartifacts:/app/mlartifacts
@@ -30,3 +32,21 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Containerfile
+    container_name: mibici-api
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    ports:
+      - "8000:8000"
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    networks:
+      - mibici
+
+networks:
+  mibici:
