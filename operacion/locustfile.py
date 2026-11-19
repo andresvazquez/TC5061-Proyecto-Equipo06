@@ -47,6 +47,17 @@ CASOS_VALIDOS = [
         "dia_semana": 6,
         "es_fin_semana": 1,
     },
+    {
+        "inventario_previo": 5.0,
+        "razon_inventario": 0.25,
+        "saldo_1h": -2.0,
+        "saldo_3h": -4.0,
+        "salidas_hora_previa": 6.0,
+        "llegadas_hora_previa": 4.0,
+        "hora_dia": 8,
+        "dia_semana": 1,
+        "es_fin_semana": 0,
+    },
 ]
 
 
