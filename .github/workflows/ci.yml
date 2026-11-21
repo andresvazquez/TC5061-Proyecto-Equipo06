@@ -31,3 +31,73 @@ jobs:
 
       - name: Run tests
         run: python -m pytest ${{ matrix.ruta }}
+
+  construir_imagen:
+    needs: pruebas
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Construir imagen Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: ./
+          file: ./Containerfile
+          push: false
+          tags: mibici-api
+
+  desplegar:
+    needs: [pruebas, construir_imagen]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Preparar archivos de MLflow
+        run: |
+          touch mlflow.db
+          mkdir -p mlartifacts
+
+      - name: Levantar servicios con Docker Compose
+        run: docker compose up -d --build
+
+      - name: Esperar servicios
+        run: sleep 15
+
+      - name: Comprobar MLflow
+        run: curl --fail http://localhost:5000/health
+
+      - name: Comprobar API
+        run: curl --fail http://localhost:8000/docs
+
+      - name: Detener servicios
+        if: always()
+        run: docker compose down
+
+  publicar_imagen:
+    needs: desplegar
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_REGISTRY }}
+
+      - name: Publicar imagen Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: ./
+          file: ./Containerfile
+          push: true
+          tags: ghcr.io/andresvazquez/mibici-api:latest
