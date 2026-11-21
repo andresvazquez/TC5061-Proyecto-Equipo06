@@ -32,6 +32,22 @@ jobs:
       - name: Run tests
         run: python -m pytest ${{ matrix.ruta }}
 
+  construir_imagen:
+    needs: pruebas
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Construir imagen Docker
+        uses: docker/build-push-action@v7
+        with:
+          context: ./
+          file: ./Containerfile
+          push: false
+          tags: mibici-api
+
   desplegar:
     needs: [pruebas, construir_imagen]
     if: github.ref == 'refs/heads/main'
@@ -40,6 +56,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Preparar archivos de MLflow
+        run: |
+          touch mlflow.db
+          mkdir -p mlartifacts
 
       - name: Levantar servicios con Docker Compose
         run: docker compose up -d --build
