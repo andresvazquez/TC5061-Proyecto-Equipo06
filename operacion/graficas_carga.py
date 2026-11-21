@@ -9,8 +9,27 @@ from mibici import config
 DIR_LOCUST = config.REPORTS_DIR / "locust"
 RUTA_HISTORIAL = DIR_LOCUST / "locust_stats_history.csv"
 
-COLUMNAS = ["Timestamp", "User Count", "Name", "Requests/s", "Failures/s", "50%", "95%"]
-NUMERICAS = ["Timestamp", "User Count", "Requests/s", "Failures/s", "50%", "95%"]
+COLUMNAS = [
+    "Timestamp",
+    "User Count",
+    "Name",
+    "Requests/s",
+    "Failures/s",
+    "50%",
+    "95%",
+    "Total Request Count",
+    "Total Failure Count",
+]
+NUMERICAS = [
+    "Timestamp",
+    "User Count",
+    "Requests/s",
+    "Failures/s",
+    "50%",
+    "95%",
+    "Total Request Count",
+    "Total Failure Count",
+]
 
 
 def leer_historial(ruta=RUTA_HISTORIAL):
@@ -26,11 +45,11 @@ def leer_historial(ruta=RUTA_HISTORIAL):
     historial = historial.dropna(subset=["Requests/s"]).reset_index(drop=True)
 
     historial["segundos"] = historial["Timestamp"] - historial["Timestamp"].min()
-    # Tasa de error: fallos entre peticiones, en porcentaje (0 si no hubo peticiones)
-    historial["tasa_error"] = (
-        (historial["Failures/s"] / historial["Requests/s"] * 100)
-        .where(historial["Requests/s"] > 0, 0)
-    )
+    # Tasa de error: fallos entre peticiones de cada intervalo, calculada con los contadores
+    # acumulados de Locust. Si no hubo peticiones en el intervalo queda vacía, no en 0%
+    peticiones = historial["Total Request Count"].diff()
+    fallos = historial["Total Failure Count"].diff()
+    historial["tasa_error"] = (fallos / peticiones * 100).where(peticiones > 0)
     return historial
 
 
