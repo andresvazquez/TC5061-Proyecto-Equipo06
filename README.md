@@ -649,6 +649,42 @@ La siguiente captura muestra la ejecución de `bandit` sobre `mibici/`, sin hall
 
 ![Resultado de bandit](docs/capturas/bandit.png)
 
+## Pipeline de CI/CD
+
+El workflow `.github/workflows/ci.yml` se ejecuta con GitHub Actions en cada `push` y en cada `pull request`. Tiene los siguientes jobs, y los dos últimos solo corren cuando el `push` es a `main`:
+
+| Job | Cuándo corre | Qué hace |
+|---|---|---|
+| `pruebas` | Push y pull request | Instala las dependencias con caché de pip y corre `pytest` en una matriz de tres grupos: `tests/api`, `tests/modeling` y el resto |
+| `construir_imagen` | Push y pull request, después de `pruebas` | Construye la imagen con el `Containerfile` sin publicarla |
+| `desplegar` | Push a `main`, después de `pruebas` y `construir_imagen` | Levanta el sistema con `docker compose up -d --build`, comprueba que MLflow responde en `/health` y la API en `/docs`, y baja los servicios |
+| `publicar_imagen` | Push a `main`, después de `desplegar` | Inicia sesión en `ghcr.io` y publica la imagen `ghcr.io/andresvazquez/mibici-api:latest` |
+
+En el runner no existe `mlflow.db`, así que `desplegar` crea un archivo vacío y la carpeta `mlartifacts` antes de levantar Compose. Con ese registro vacío la API arranca sin modelo: el despliegue comprueba que los servicios se levantan y se comunican, pero no la predicción.
+
+### Secreto para publicar la imagen
+
+El job `publicar_imagen` necesita el secreto `GH_REGISTRY` en el repositorio (Settings, Secrets and variables, Actions). Es un token personal con el permiso `write:packages` y se usa como contraseña en el inicio de sesión de `ghcr.io`. Si el secreto no existe o venció, el job falla en el login.
+
+### Cómo ver el resultado
+
+1. Abrir la pestaña **Actions** del repositorio.
+2. Elegir el workflow **CI** y la ejecución que se quiere revisar.
+3. Abrir un job para ver sus pasos y el registro de cada uno. Una marca verde indica que el job terminó bien y una roja, que falló en alguno de sus pasos.
+
+### Correr lo mismo en local
+
+Los jobs repiten comandos que se pueden ejecutar desde la raíz del repositorio:
+
+```bash
+pytest
+podman build -t mibici-api -f Containerfile .
+docker compose up -d --build
+docker compose down
+```
+
+El primero equivale a `pruebas`, el segundo a `construir_imagen` y los dos últimos a `desplegar`. A diferencia del runner, en local el registro de modelos sí existe, así que la API carga el champion al arrancar.
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests
