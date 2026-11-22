@@ -323,6 +323,52 @@ podman rm mibici-api
 
 Con Docker la secuencia es la misma cambiando podman por docker, pero host.containers.internal es la dirección del host en Podman. Para Docker hay que verificar la dirección equivalente en su documentación antes de usar el mismo valor en MLFLOW_TRACKING_URI.
 
+### Levantar el sistema con Docker Compose
+
+Desde la raíz del repositorio, el archivo `docker-compose.yml` levanta el servidor de tracking y la API en un solo paso:
+
+```bash
+docker compose up -d --build
+```
+
+Con Podman se instala `podman-compose` y se usa el mismo archivo:
+
+```bash
+pip3 install podman-compose
+podman-compose up -d --build
+```
+
+En macOS, `podman-compose` también se puede instalar con `brew install podman-compose`. Los puertos expuestos se pueden cambiar copiando `.env.example` a `.env` y ajustando `MLFLOW_PORT` y `API_PORT`.
+
+Los servicios son:
+
+- `mlflow`: servidor de tracking en `http://localhost:5000`. Usa `mlflow.db` como base de datos y sirve los artefactos desde `./mlartifacts`, que se monta en `/app/mlartifacts`; por eso el comando incluye `--default-artifact-root ./mlartifacts`.
+- `api`: FastAPI en `http://127.0.0.1:8000`. Dentro de la red `mibici` usa `MLFLOW_TRACKING_URI=http://mlflow:5000` para cargar el modelo `mibici-equipo06-p2-riesgo@champion` del Model Registry.
+
+Para verificar que ambos quedaron arriba:
+
+```bash
+docker compose ps
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5000/health
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/docs
+```
+
+Con Podman, los mismos comandos se escriben con `podman-compose` en lugar de `docker compose`. Las respuestas esperadas son `200` en `/health` y en `/docs`; la API tarda unos segundos en descargar el modelo champion. Si el registro local tiene artefactos con rutas absolutas de Windows, hay que volver a registrar o promover el modelo con el servidor de Compose para que los artefactos queden bajo `mlartifacts/`; de lo contrario `/predict` responderá `503`.
+
+![Sistema levantado con Compose](docs/capturas/levantar_compose.png)
+
+Para detener los servicios sin borrar la base ni los artefactos locales:
+
+```bash
+docker compose down
+```
+
+o, con Podman:
+
+```bash
+podman-compose down
+```
+
 ### Ejemplo de petición y respuesta
 
 Con el contenedor en ejecución, se envía una estación de ejemplo con las nueve variables que usa el modelo de P2:
