@@ -685,6 +685,51 @@ docker compose down
 
 El primero equivale a `pruebas`, el segundo a `construir_imagen` y los dos últimos a `desplegar`. A diferencia del runner, en local el registro de modelos sí existe, así que la API carga el champion al arrancar.
 
+## Pruebas de carga y consumo de recursos
+
+Se realizaron pruebas de carga sobre `POST /predict` utilizando Locust contra la API desplegada localmente con MLflow y FastAPI en contenedores.
+
+Antes de iniciar las mediciones se verificó que el modelo `mibici-equipo06-p2-riesgo@champion`, versión 1, estuviera cargado correctamente y que el endpoint respondiera predicciones válidas.
+
+El escenario utiliza las nueve variables de P2 y un `wait_time` aleatorio de 1 a 3 segundos entre solicitudes.
+
+Se realizaron tres corridas de 60 segundos con cargas crecientes:
+
+| Usuarios | Spawn rate | Duración | Requests | RPS | Mediana | P95 | Error |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 2 usuarios/s | 60 s | 288 | 5.34 | 63 ms | 110 ms | 0.00% |
+| 50 | 10 usuarios/s | 60 s | 1,365 | 24.15 | 100 ms | 310 ms | 0.00% |
+| 100 | 20 usuarios/s | 60 s | 1,952 | 34.48 | 990 ms | 1,500 ms | 0.00% |
+
+Las pruebas se ejecutaron en modo headless. Por ejemplo, para 100 usuarios:
+
+```bash
+locust \
+  -f operacion/locustfile.py \
+  --headless \
+  --host http://127.0.0.1:8000 \
+  --users 100 \
+  --spawn-rate 20 \
+  --run-time 60s \
+  --csv reports/locust/locust_100 \
+  --csv-full-history \
+  --html reports/locust/locust_100.html
+```
+
+El consumo de recursos de los contenedores se registró cada 2 segundos durante las pruebas.
+
+| Usuarios | CPU API promedio | CPU API máximo | RAM API promedio | RAM API máxima |
+|---:|---:|---:|---:|---:|
+| 10 | 7.81% | 10.07% | 937.9 MB | 938.3 MB |
+| 50 | 18.63% | 25.40% | 941.0 MB | 942.5 MB |
+| 100 | 33.58% | 40.63% | 950.3 MB | 951.9 MB |
+
+Entre 10 y 50 usuarios el servicio aumenta su throughput de 5.34 a 24.15 solicitudes por segundo manteniendo una mediana de latencia de 100 ms. Con 100 usuarios, el throughput aumenta a 34.48 solicitudes por segundo, pero la mediana llega a 990 ms y el percentil 95 a 1.5 s.
+
+Esto muestra un punto de degradación entre 50 y 100 usuarios concurrentes: el throughput continúa aumentando, pero la latencia crece de forma considerable. No se observaron errores HTTP durante ninguna de las tres corridas y el consumo de memoria de la API se mantuvo estable alrededor de 1 GB.
+
+Los artefactos completos de las pruebas se encuentran en `reports/locust/`, incluyendo los CSV, reportes HTML de Locust, mediciones de recursos y gráficas de latencia, peticiones por segundo y tasa de error.
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests
