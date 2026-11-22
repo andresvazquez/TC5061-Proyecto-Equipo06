@@ -651,7 +651,7 @@ La siguiente captura muestra la ejecución de `bandit` sobre `mibici/`, sin hall
 
 ## Pipeline de CI/CD
 
-El workflow `.github/workflows/ci.yml` se ejecuta con GitHub Actions en cada `push` y en cada `pull request`. Tiene los siguientes jobs, y los dos últimos solo corren cuando el `push` es a `main`:
+El workflow `.github/workflows/ci.yml` se ejecuta con GitHub Actions en cada `push` y en cada `pull request`. Tiene los siguientes jobs. `desplegar` y `publicar_imagen` solo corren cuando el `push` es a `main`:
 
 | Job | Cuándo corre | Qué hace |
 |---|---|---|
@@ -659,6 +659,7 @@ El workflow `.github/workflows/ci.yml` se ejecuta con GitHub Actions en cada `pu
 | `construir_imagen` | Push y pull request, después de `pruebas` | Construye la imagen con el `Containerfile` sin publicarla |
 | `desplegar` | Push a `main`, después de `pruebas` y `construir_imagen` | Levanta el sistema con `docker compose up -d --build`, comprueba que MLflow responde en `/health` y la API en `/docs`, y baja los servicios |
 | `publicar_imagen` | Push a `main`, después de `desplegar` | Inicia sesión en `ghcr.io` y publica la imagen `ghcr.io/andresvazquez/mibici-api:latest` |
+| `notificar` (Resumen del pipeline) | Siempre, al final, aunque otro job falle | Escribe en el resumen de la ejecución una tabla con el resultado de cada job |
 
 En el runner no existe `mlflow.db`, así que `desplegar` crea un archivo vacío y la carpeta `mlartifacts` antes de levantar Compose. Con ese registro vacío la API arranca sin modelo: el despliegue comprueba que los servicios se levantan y se comunican, pero no la predicción.
 
@@ -671,6 +672,7 @@ El job `publicar_imagen` necesita el secreto `GH_REGISTRY` en el repositorio (Se
 1. Abrir la pestaña **Actions** del repositorio.
 2. Elegir el workflow **CI** y la ejecución que se quiere revisar.
 3. Abrir un job para ver sus pasos y el registro de cada uno. Una marca verde indica que el job terminó bien y una roja, que falló en alguno de sus pasos.
+4. Al final de la página de la ejecución aparece el **Resumen del pipeline**, con el resultado de cada job en una sola tabla.
 
 ### Correr lo mismo en local
 
