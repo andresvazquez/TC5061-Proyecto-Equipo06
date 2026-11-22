@@ -101,3 +101,25 @@ jobs:
           file: ./Containerfile
           push: true
           tags: ghcr.io/andresvazquez/mibici-api:latest
+
+  notificar:
+    name: Resumen del pipeline
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - pruebas
+      - construir_imagen
+      - desplegar
+      - publicar_imagen
+
+    steps:
+      - name: Escribir resumen
+        run: |
+          echo "## Resumen del pipeline" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Job | Resultado |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Pruebas | ${{ needs.pruebas.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Construir imagen | ${{ needs.construir_imagen.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Desplegar | ${{ needs.desplegar.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Publicar imagen | ${{ needs.publicar_imagen.result }} |" >> "$GITHUB_STEP_SUMMARY"
