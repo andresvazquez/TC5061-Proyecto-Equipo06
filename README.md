@@ -674,6 +674,14 @@ El job `publicar_imagen` necesita el secreto `GH_REGISTRY` en el repositorio (Se
 3. Abrir un job para ver sus pasos y el registro de cada uno. Una marca verde indica que el job terminó bien y una roja, que falló en alguno de sus pasos.
 4. Al final de la página de la ejecución aparece el **Resumen del pipeline**, con el resultado de cada job en una sola tabla.
 
+La siguiente captura muestra la ejecución de `main` con todos los jobs en verde:
+
+![Pipeline de CI/CD en verde sobre main](docs/capturas/pipeline_en_verde.png)
+
+Con `publicar_imagen` en verde, la imagen queda publicada en el registro de contenedores de GitHub, en la sección Packages del perfil, como `mibici-api`:
+
+![Imagen mibici-api publicada en ghcr.io](docs/capturas/imagen_publicada.png)
+
 ### Correr lo mismo en local
 
 Los jobs repiten comandos que se pueden ejecutar desde la raíz del repositorio:
