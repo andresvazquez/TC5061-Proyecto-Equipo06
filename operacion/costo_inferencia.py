@@ -9,8 +9,10 @@ DIR_LOCUST = config.REPORTS_DIR / "locust"
 DIR_FINOPS = config.REPORTS_DIR / "finops"
 RUTA_RECURSOS = DIR_LOCUST / "recursos.csv"
 RUTA_TABLA = DIR_FINOPS / "costo_inferencia.csv"
+RUTA_TABLA_REPLICAS = DIR_FINOPS / "costo_inferencia_replicas.csv"
 
 USUARIOS = [10, 50, 100]
+REPLICAS = [1, 2, 4]
 SEGUNDOS_POR_HORA = 3600
 # Instancia de referencia: AWS EC2 t3.medium (2 vCPU, 4 GiB), Linux, US East (N. Virginia)
 # Precio por hora bajo demanda de https://aws.amazon.com/ec2/instance-types/t3/
@@ -107,6 +109,34 @@ def calcular_fila(usuarios, recursos, precio_hora):
     }
 
 
+def calcular_replicas(filas, precio_hora):
+    registros = []
+    for fila in filas:
+        fraccion_cpu = (fila["api_cpu_prom"] + fila["mlflow_cpu_prom"]) / (VCPU_INSTANCIA * 100)
+        for replicas in REPLICAS:
+            rps = fila["rps"] * replicas
+            peticiones_hora = rps * SEGUNDOS_POR_HORA
+            costo_hora = precio_hora * replicas
+            registros.append(
+                {
+                    "usuarios": fila["usuarios"],
+                    "replicas": replicas,
+                    "rps_por_replica": fila["rps"],
+                    "rps": rps,
+                    "mediana_ms": fila["mediana_ms"],
+                    "p95_ms": fila["p95_ms"],
+                    "fraccion_cpu": fraccion_cpu,
+                    "peticiones_por_hora": peticiones_hora,
+                    "costo_por_hora": costo_hora,
+                    "costo_por_inferencia": costo_hora / peticiones_hora,
+                    "costo_por_inferencia_cpu_usada": (
+                        costo_hora * fraccion_cpu / peticiones_hora
+                    ),
+                }
+            )
+    return pd.DataFrame(registros)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Costo por inferencia a partir de la prueba de carga de Locust"
@@ -122,12 +152,21 @@ def main():
     recursos = leer_recursos()
     filas = [calcular_fila(usuarios, recursos, args.precio_hora) for usuarios in USUARIOS]
     tabla = pd.DataFrame(filas)
+    tabla_replicas = calcular_replicas(filas, args.precio_hora)
 
     DIR_FINOPS.mkdir(parents=True, exist_ok=True)
     tabla.to_csv(RUTA_TABLA, index=False)
+    tabla_replicas.to_csv(RUTA_TABLA_REPLICAS, index=False)
 
     print(tabla.set_index("usuarios").T.to_string(float_format=lambda v: f"{v:.6g}"))
     print(f"\nTabla guardada en {RUTA_TABLA}")
+    print("\nEscalabilidad lineal: capacidad y costo por hora escalan con las réplicas")
+    print(
+        tabla_replicas.set_index(["usuarios", "replicas"]).to_string(
+            float_format=lambda v: f"{v:.6g}"
+        )
+    )
+    print(f"\nTabla guardada en {RUTA_TABLA_REPLICAS}")
 
 
 if __name__ == "__main__":
