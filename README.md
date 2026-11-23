@@ -43,10 +43,13 @@ Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excl
 
 ## Estructura de carpetas
 
-```
+
 TC5061-Proyecto-Equipo06/
 ├── .venv/              <- Entorno virtual local (ignorado en Git)
-├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI)
+├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI, MLFLOW_PORT y API_PORT)
+├── .github/
+│   └── workflows/
+│       └── ci.yml      <- Pipeline de CI/CD con GitHub Actions
 ├── app/                <- API REST con FastAPI para servir el modelo
 │   ├── __init__.py
 │   ├── main.py         <- Aplicación FastAPI y endpoint POST /predict
@@ -60,6 +63,7 @@ TC5061-Proyecto-Equipo06/
 │   └── raw/            <- Copias locales de viajes y nomenclatura de estaciones
 │
 ├── docs/               <- Documentación adicional del proyecto
+│   └── capturas/       <- Capturas de evidencia de las ejecuciones
 ├── mibici/             <- Paquete con el código fuente del proyecto
 │   ├── __init__.py
 │   ├── config.py       <- Variables globales, rutas e intervalos de fechas
@@ -93,6 +97,12 @@ TC5061-Proyecto-Equipo06/
 ├── mlruns/             <- Registro local de ejecuciones y experimentos de MLflow
 ├── models/             <- Modelos entrenados y serializados
 ├── notebooks/          <- Notebooks de exploración inicial y validación
+├── operacion/          <- Pruebas de carga, registro de recursos y costo por inferencia
+│   ├── __init__.py
+│   ├── costo_inferencia.py     <- Costo por inferencia y escalabilidad por réplicas (FinOps)
+│   ├── graficas_carga.py       <- Gráficas de latencia, peticiones por segundo y tasa de error
+│   ├── locustfile.py           <- Escenario de carga de Locust sobre POST /predict
+│   └── registrar_recursos.sh   <- Registro de CPU y memoria de los contenedores (docker stats)
 ├── references/         <- Manifiesto de datos (data_manifest.csv) y referencias técnicas
 ├── reports/            <- Reportes generados y gráficas/artefactos de evaluación
 │   ├── ab_test/        <- Comparación Champion vs Challenger de P2
@@ -106,10 +116,29 @@ TC5061-Proyecto-Equipo06/
 │   │   ├── data_drift.json
 │   │   └── tabla_drift.csv
 │   ├── figures/
-│   └── security/       <- Reporte de pip-audit
+│   ├── finops/         <- Costo por inferencia y escalabilidad por réplicas
+│   │   ├── costo_inferencia.csv
+│   │   └── costo_inferencia_replicas.csv
+│   ├── locust/         <- Resultados de la prueba de carga con Locust
+│   │   ├── locust_10.html
+│   │   ├── locust_10_stats.csv
+│   │   ├── locust_10_stats_history.csv
+│   │   ├── locust_50.html
+│   │   ├── locust_50_stats.csv
+│   │   ├── locust_50_stats_history.csv
+│   │   ├── locust_100.html
+│   │   ├── locust_100_stats.csv
+│   │   ├── locust_100_stats_history.csv
+│   │   ├── recursos.csv            <- CPU y memoria de los contenedores durante la prueba
+│   │   ├── latencia.png
+│   │   ├── peticiones_por_segundo.png
+│   │   └── tasa_error.png
+│   └── security/       <- Reportes de pip-audit y bandit
 ├── tests/              <- Pruebas automatizadas con pytest
 │
 ├── .gitignore          <- Reglas para ignorar datos pesados, entornos y carpetas locales
+├── Containerfile       <- Imagen de Python 3.13 que usan los servicios api y mlflow
+├── docker-compose.yml  <- Orquesta los servicios mlflow y api con un solo comando
 ├── Makefile           <- Comandos automatizados para el ciclo de vida del proyecto
 ├── MLproject           <- MLflow Project con los entry points ingest y train
 ├── mlflow.db           <- Base de datos local para el tracking server de MLflow
@@ -118,7 +147,25 @@ TC5061-Proyecto-Equipo06/
 ├── README.md           <- Guía principal de uso y documentación
 ├── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
 └── SECURITY.md         <- Reglas de seguridad y manejo de credenciales
-```
+
+
+### Servicios, puertos y variables de entorno
+
+docker-compose.yml define dos servicios en la red mibici:
+
+| Servicio | Contenedor | Puerto en el host | Puerto interno | Qué hace |
+|---|---|---|---|---|
+| mlflow | mibici-mlflow | 5000 (MLFLOW_PORT) | 5000 | Servidor de tracking y Model Registry, con mlflow.db y mlartifacts/ tomados de la raíz del proyecto |
+| api | mibici-api | 8000 (API_PORT) | 8000 | API FastAPI con POST /predict; espera a que mlflow esté sano antes de arrancar |
+
+Variables de entorno (se copian de .env.example a .env):
+
+| Variable | Valor por defecto | Para qué sirve |
+|---|---|---|
+| MLFLOW_TRACKING_URI | http://localhost:5000 | Dirección del servidor de tracking. Dentro de Compose, la API usa http://mlflow:5000 |
+| MLFLOW_PORT | 5000 | Puerto del host para mlflow |
+| API_PORT | 8000 | Puerto del host para la API |
+| MLFLOW_HTTP_REQUEST_TIMEOUT | 300 (opcional, comentada) | Tiempo máximo de espera de las peticiones HTTP a MLflow, en segundos |
 
 --------
 
