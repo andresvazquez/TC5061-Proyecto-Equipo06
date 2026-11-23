@@ -46,7 +46,10 @@ Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excl
 ```
 TC5061-Proyecto-Equipo06/
 ├── .venv/              <- Entorno virtual local (ignorado en Git)
-├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI)
+├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI, MLFLOW_PORT y API_PORT)
+├── .github/
+│   └── workflows/
+│       └── ci.yml      <- Pipeline de CI/CD con GitHub Actions: pruebas, imagen, despliegue, publicación y resumen
 ├── app/                <- API REST con FastAPI para servir el modelo
 │   ├── __init__.py
 │   ├── main.py         <- Aplicación FastAPI y endpoint POST /predict
@@ -93,6 +96,12 @@ TC5061-Proyecto-Equipo06/
 ├── mlruns/             <- Registro local de ejecuciones y experimentos de MLflow
 ├── models/             <- Modelos entrenados y serializados
 ├── notebooks/          <- Notebooks de exploración inicial y validación
+├── operacion/          <- Pruebas de carga y análisis de costo de la Semana 10
+│   ├── __init__.py
+│   ├── costo_inferencia.py   <- Costo por inferencia con 1, 2 y 4 réplicas a partir de Locust y recursos.csv
+│   ├── graficas_carga.py     <- Gráficas de latencia, peticiones por segundo y tasa de error
+│   ├── locustfile.py         <- Escenario de carga de Locust sobre POST /predict
+│   └── registrar_recursos.sh <- Registro de CPU y memoria de los contenedores con docker o podman stats
 ├── references/         <- Manifiesto de datos (data_manifest.csv) y referencias técnicas
 ├── reports/            <- Reportes generados y gráficas/artefactos de evaluación
 │   ├── ab_test/        <- Comparación Champion vs Challenger de P2
@@ -106,10 +115,23 @@ TC5061-Proyecto-Equipo06/
 │   │   ├── data_drift.json
 │   │   └── tabla_drift.csv
 │   ├── figures/
+│   ├── finops/         <- Costo por inferencia de la Semana 10
+│   │   ├── costo_inferencia.csv          <- Una instancia, con 10, 50 y 100 usuarios
+│   │   └── costo_inferencia_replicas.csv <- Con 1, 2 y 4 réplicas
+│   ├── locust/         <- Resultados de la prueba de carga con Locust
+│   │   ├── locust_10.html, locust_50.html y locust_100.html  <- Reportes HTML de cada corrida
+│   │   ├── locust_10_stats.csv, locust_50_stats.csv y locust_100_stats.csv  <- Estadísticas de cada corrida
+│   │   ├── locust_10_stats_history.csv, locust_50_stats_history.csv y locust_100_stats_history.csv  <- Historial de cada corrida
+│   │   ├── recursos.csv                  <- CPU y memoria de los contenedores durante la prueba
+│   │   ├── latencia.png                  <- Latencia mediana y percentil 95
+│   │   ├── peticiones_por_segundo.png    <- Peticiones por segundo
+│   │   └── tasa_error.png                <- Tasa de error
 │   └── security/       <- Reporte de pip-audit
 ├── tests/              <- Pruebas automatizadas con pytest
 │
 ├── .gitignore          <- Reglas para ignorar datos pesados, entornos y carpetas locales
+├── Containerfile       <- Imagen de la API (Python 3.13, FastAPI en el puerto 8000)
+├── docker-compose.yml  <- Servicios mlflow y api, con red, volúmenes y puertos por variable de entorno
 ├── Makefile           <- Comandos automatizados para el ciclo de vida del proyecto
 ├── MLproject           <- MLflow Project con los entry points ingest y train
 ├── mlflow.db           <- Base de datos local para el tracking server de MLflow
@@ -119,6 +141,13 @@ TC5061-Proyecto-Equipo06/
 ├── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
 └── SECURITY.md         <- Reglas de seguridad y manejo de credenciales
 ```
+
+Servicios que levanta `docker-compose.yml`:
+
+| Servicio | Puerto en el host | Variable del puerto | Otras variables |
+|---|---|---|---|
+| `mlflow` | 5000 | `MLFLOW_PORT` | Ninguna |
+| `api` | 8000 | `API_PORT` | `MLFLOW_TRACKING_URI=http://mlflow:5000` dentro de la red `mibici` |
 
 --------
 
