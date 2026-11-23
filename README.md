@@ -43,7 +43,7 @@ Los datos se procesan mediante Python y se almacenan en formato Parquet. Se excl
 
 ## Estructura de carpetas
 
-
+```
 TC5061-Proyecto-Equipo06/
 ├── .venv/              <- Entorno virtual local (ignorado en Git)
 ├── .env.example        <- Ejemplo de las variables de entorno (MLFLOW_TRACKING_URI, MLFLOW_PORT y API_PORT)
@@ -147,7 +147,7 @@ TC5061-Proyecto-Equipo06/
 ├── README.md           <- Guía principal de uso y documentación
 ├── requirements.txt    <- Dependencias del proyecto para la reproducción del entorno
 └── SECURITY.md         <- Reglas de seguridad y manejo de credenciales
-
+```
 
 ### Servicios, puertos y variables de entorno
 
