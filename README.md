@@ -798,9 +798,9 @@ Las réplicas aumentan la capacidad, pero no cambian el costo por inferencia. Lo
 
 El desarrollo y el ahorro estimado de cada una están en el reporte.
 
-- *Aprovechar mejor cada instancia:* el costo por inferencia baja unas 6.5 veces entre 10 y 100 usuarios con la misma instancia.
-- *Agregar réplicas solo si la latencia sube con la carga:* el P95 pasa de 310 ms (50 usuarios) a 1,500 ms (100 usuarios), y el costo por inferencia es el mismo con 1, 2 o 4 réplicas.
-- *Reducir la memoria del sistema:* MLflow ocupa unos 2.3 GB constantes y la API unos 950 MB, de una instancia de 4 GiB.
+- *Que el sistema quepa en una instancia más pequeña:* la API y MLflow usan unos 3.3 GB y solo 25.4% de la CPU, así que la memoria es el límite (MLflow ocupa unos 2.3 GB y la API unos 950 MB).
+- *Aprovechar la segunda vCPU con más de un proceso en la API:* la CPU máxima de la API fue 40.6% con 100 usuarios; es una hipótesis que hay que probar.
+- *Agregar réplicas solo si la latencia lo exige:* con 1, 2 o 4 réplicas el costo por inferencia es el mismo (bajo el supuesto de escalamiento lineal), y el P95 pasa de 310 ms a 1,500 ms entre 50 y 100 usuarios.
 
 ## Flujo de trabajo con Git
 
