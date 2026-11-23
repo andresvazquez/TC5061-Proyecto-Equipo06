@@ -740,6 +740,68 @@ Esto muestra un punto de degradación entre 50 y 100 usuarios concurrentes: el t
 
 Los artefactos completos de las pruebas se encuentran en `reports/locust/`, incluyendo los CSV, reportes HTML de Locust, mediciones de recursos y gráficas de latencia, peticiones por segundo y tasa de error.
 
+## Análisis FinOps
+
+Estimación del costo por inferencia del sistema (API y servidor de MLflow) a partir de la prueba de carga con Locust y el registro de recursos.
+
+### Supuestos
+
+- *Instancia de referencia:* AWS EC2 t3.medium (2 vCPU y 4 GiB), Linux, región US East (N. Virginia), bajo demanda.
+- *Precio:* $0.0418 por hora, tomado de la página oficial de AWS (https://aws.amazon.com/ec2/instance-types/t3/), consultada el 22 de noviembre de 2026. Está en la constante PRECIO_HORA_USD de operacion/costo_inferencia.py.
+- *Carga:* peticiones por segundo medidas en las corridas de 10, 50 y 100 usuarios (60 segundos cada una). Las mediciones se hicieron en una máquina local, no en la instancia de AWS, así que las cifras no se trasladan exactamente.
+- *CPU realmente usada:* suma de la CPU promedio de mibici-api y mibici-mlflow, entre 200% (2 vCPU).
+- *Réplicas:* cada réplica cuesta una instancia completa y las peticiones por segundo escalan en línea recta.
+- No incluye almacenamiento, transferencia de red ni cargos adicionales de las instancias T3.
+
+### Fórmula
+
+- Peticiones por hora = peticiones por segundo × 3600
+- Costo por inferencia = costo por hora de la instancia ÷ peticiones por hora
+- Costo por inferencia con CPU usada = costo por inferencia × fracción de CPU usada
+- Con N réplicas: costo por hora = N × precio por hora; peticiones por segundo = N × las de una réplica
+
+### Cómo ejecutarlo
+
+Con el entorno virtual activo y desde la raíz del proyecto:
+
+bash
+python -m operacion.costo_inferencia
+
+
+Imprime las tablas y las guarda en reports/finops/: costo_inferencia.csv (una instancia) y costo_inferencia_replicas.csv (1, 2 y 4 réplicas).
+
+### Costo por inferencia con una instancia (USD)
+
+| Usuarios | Peticiones/s | Mediana | P95 | Peticiones/hora | Costo por inferencia | Con CPU usada |
+|---|---|---|---|---|---|---|
+| 10 | 5.34 | 63 ms | 110 ms | 19,212 | 2.18e-06 | 4.08e-07 |
+| 50 | 24.15 | 100 ms | 310 ms | 86,939 | 4.81e-07 | 9.66e-08 |
+| 100 | 34.48 | 990 ms | 1,500 ms | 124,139 | 3.37e-07 | 8.54e-08 |
+
+### Costo con 1, 2 y 4 réplicas (USD)
+
+| Usuarios | Réplicas | Peticiones/hora | Costo por hora | Costo por inferencia |
+|---|---|---|---|---|
+| 10 | 1 | 19,212 | 0.0418 | 2.18e-06 |
+| 10 | 2 | 38,425 | 0.0836 | 2.18e-06 |
+| 10 | 4 | 76,850 | 0.1672 | 2.18e-06 |
+| 50 | 1 | 86,939 | 0.0418 | 4.81e-07 |
+| 50 | 2 | 173,879 | 0.0836 | 4.81e-07 |
+| 50 | 4 | 347,758 | 0.1672 | 4.81e-07 |
+| 100 | 1 | 124,139 | 0.0418 | 3.37e-07 |
+| 100 | 2 | 248,279 | 0.0836 | 3.37e-07 |
+| 100 | 4 | 496,558 | 0.1672 | 3.37e-07 |
+
+Las réplicas aumentan la capacidad, pero no cambian el costo por inferencia. Lo que lo baja es la carga: pasa de 2.18e-06 con 10 usuarios a 3.37e-07 con 100 usuarios.
+
+### Optimizaciones propuestas
+
+El desarrollo y el ahorro estimado de cada una están en el reporte.
+
+- *Aprovechar mejor cada instancia:* el costo por inferencia baja unas 6.5 veces entre 10 y 100 usuarios con la misma instancia.
+- *Agregar réplicas solo si la latencia sube con la carga:* el P95 pasa de 310 ms (50 usuarios) a 1,500 ms (100 usuarios), y el costo por inferencia es el mismo con 1, 2 o 4 réplicas.
+- *Reducir la memoria del sistema:* MLflow ocupa unos 2.3 GB constantes y la API unos 950 MB, de una instancia de 4 GiB.
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests
