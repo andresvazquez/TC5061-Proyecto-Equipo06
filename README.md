@@ -1,3 +1,16 @@
+---
+model_name: mibici-equipo06-p2-riesgo
+model_version: 1
+alias: champion
+framework: mlflow
+task: binary-classification
+owner: Equipo 06
+last_updated: 2026-11-25
+experiment: mibici-equipo06
+source_run: p2-rf-features-trial-2
+dataset_hash: 723b4c4628046549dce640dabba90372588f9ea49fc882fecee42a5e1afedd7a
+---
+
 # TC5061 Proyecto Equipo06
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
@@ -830,6 +843,64 @@ El desarrollo y el ahorro estimado de cada una están en el reporte.
 - *Que el sistema quepa en una instancia más pequeña:* la API y MLflow usan unos 3.3 GB y solo 25.4% de la CPU, así que la memoria es el límite (MLflow ocupa unos 2.3 GB y la API unos 950 MB).
 - *Aprovechar la segunda vCPU con más de un proceso en la API:* la CPU máxima de la API fue 40.6% con 100 usuarios; es una hipótesis que hay que probar.
 - *Agregar réplicas solo si la latencia lo exige:* con 1, 2 o 4 réplicas el costo por inferencia es el mismo (bajo el supuesto de escalamiento lineal), y el P95 pasa de 310 ms a 1,500 ms entre 50 y 100 usuarios.
+
+## Model Card
+
+### Model Details
+
+El modelo registrado es `mibici-equipo06-p2-riesgo`, versión 1 con el alias `champion`. Es un Random Forest de clasificación binaria con 100 árboles, profundidad máxima de 15, pesos de clase 0.1 para la clase normal y 0.9 para la clase de riesgo, y semilla 42. La corrida de origen es `p2-rf-features-trial-2`, dentro del experimento `mibici-equipo06`, y usa nueve variables por estación y hora. El linaje completo —corrida, commit y versión de datos— queda en las etiquetas de la versión registrada y en MLflow Tracking.
+
+### Intended Use
+
+El modelo estima, con una hora de anticipación, si una estación de MiBici estará en riesgo de quedarse sin bicicletas o sin anclajes disponibles. La salida apoya las decisiones de rebalanceo del equipo operativo. Se sirve desde la API FastAPI mediante el endpoint `POST /predict`, que carga el modelo como `models:/mibici-equipo06-p2-riesgo@champion` y devuelve la predicción junto con el modelo, el alias y la versión.
+
+### Out-of-Scope Uses
+
+Este modelo no predice la demanda de viajes de P1, no agrupa estaciones como P3 y no decide automáticamente rutas de rebalanceo. Tampoco está pensado para estaciones sin capacidad informada, para periodos fuera del rango de datos usado o para operar sin supervisión humana cuando la precisión sea baja. Las probabilidades del modelo no deben interpretarse como un costo o una garantía de disponibilidad.
+
+### Training Data
+
+Los datos son del portal de Datos Abiertos de MiBici: 15,011,969 viajes en 40 archivos mensuales, de junio de 2023 a septiembre de 2026, y el catálogo de 484 estaciones de `nomenclatura_2026_09.csv`. El manifiesto `references/data_manifest.csv` registra los registros y hash de cada archivo; su hash es `723b4c4628046549dce640dabba90372588f9ea49fc882fecee42a5e1afedd7a`. La malla excluye estaciones sin capacidad y horas sin historia suficiente. Los cortes temporales son entrenamiento hasta marzo de 2026, validación de abril a junio de 2026 y prueba de julio a septiembre de 2026. Las nueve variables son `inventario_previo`, `razon_inventario`, `saldo_1h`, `saldo_3h`, `salidas_hora_previa`, `llegadas_hora_previa`, `hora_dia`, `dia_semana` y `es_fin_semana`.
+
+### Training Procedure
+
+El flujo usa `mlflow run` sobre el entry point `train` de `MLproject`, con el experimento `mibici-equipo06`. La búsqueda entrena cuatro combinaciones y se conserva la corrida `p2-rf-features-trial-2`, de 100 árboles y profundidad 15. El entrenamiento registra parámetros, métricas, figuras, el manifiesto de datos, la configuración, la firma de entrada, un ejemplo de entrada y el dataset usado. El umbral de alerta se elige en validación con `RECALL_MINIMO = 0.85`, definido en `mibici/config.py`, para reducir falsas alarmas sin perder detección de riesgo.
+
+### Evaluation Results
+
+En el conjunto de prueba de julio a septiembre de 2026, la versión champion obtuvo precisión 0.3274, recall 0.9084, F1 0.4814, PR-AUC 0.6332 y 15,953 falsas alarmas. En la comparación fuera de línea con la versión alternativa, sobre las mismas 100,000 filas, el recall fue 0.9084 para el champion y 0.9065 para el challenger; las falsas alarmas bajaron 1.8 %, por debajo del 5 % exigido por la regla de promoción, así que se conservó el champion. Las cifras están en `reports/ab_test/comparacion_p2.csv` y en la sección de A/B testing del README.
+
+### Limitations
+
+La precisión es baja, por lo que el modelo genera falsas alarmas y requiere revisión humana antes de actuar. El inventario se estima a partir de viajes y capacidad, no de un sensor en tiempo real. El modelo se evaluó fuera de línea y no se midió tráfico real entre versiones. Los datos terminan en septiembre de 2026, así que el desempeño futuro depende del monitoreo de drift. La API carga el modelo al iniciar y depende de que MLflow esté sano; en el pipeline se valida que los servicios se levantan y se comunican, pero no la predicción porque el registro local de modelos no forma parte del repositorio.
+
+### Ethical Considerations
+
+El modelo usa datos agregados de viajes y no información personal de usuarios. Una alerta mal interpretada puede desviar esfuerzo de rebalanceo hacia estaciones que no lo necesitan, por lo que las decisiones deben ser auditables y estar acompañadas de criterio operativo. La regla de promoción se fijó antes de comparar versiones para evitar elegir el modelo después de ver el resultado. La documentación del linaje y del alias vigente permite identificar qué versión respondió cada predicción.
+
+### Reproducibility
+
+Con el servidor de tracking levantado y `MLFLOW_TRACKING_URI` apuntando a él, el modelo se reproduce desde la raíz del proyecto con:
+
+```bash
+mlflow run . -e train -P question=p2 -P model=rf-features-search --experiment-name mibici-equipo06 --env-manager local
+```
+
+La corrida ganadora se registra como champion con:
+
+```bash
+python -m mibici.modeling.registry --question p2 --run-id <run_id>
+```
+
+La versión alternativa y la comparación se reproducen con:
+
+```bash
+python -m mibici.modeling.train_p2_reentrenado
+python -m mibici.modeling.registry_challenger --run-id <run_id>
+python -m mibici.modeling.ab_test
+```
+
+El ID exacto de la corrida, el commit y la versión de datos se consultan en MLflow Tracking y quedan como etiquetas en la versión registrada. La petición de ejemplo del README comprueba que la API responde con `modelo`, `alias champion` y `versión 1`.
 
 ## Flujo de trabajo con Git
 
