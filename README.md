@@ -592,6 +592,33 @@ Resultados sobre julio a septiembre de 2026:
 
 El recall de la versión alternativa es 0.0019 menor que el de la vigente y sus falsas alarmas bajan 1.8 %, lejos del 5 %. Con la regla, el champion se queda como versión vigente y no se mueve ningún alias.
 
+## Model Registry y linaje de P2
+
+El modelo de P2 (riesgo de una estación en la siguiente hora) está en el Model Registry de MLflow con el nombre mibici-equipo06-p2-riesgo. El estado de producción lo define el alias champion; no se usan las etapas Staging y Production.
+
+| Versión | Alias | Qué es |
+|---|---|---|
+| 1 | champion | Modelo elegido de P2: Random Forest de 100 árboles y profundidad máxima de 15 |
+| 2 | challenger | Versión alternativa reentrenada con datos hasta junio de 2026 |
+
+El A/B testing (sección anterior) mantuvo el champion, así que el alias no se movió.
+
+### Cómo pide el modelo la API
+
+app/modelo.py carga el modelo con la dirección models:/mibici-equipo06-p2-riesgo@champion y app/main.py consulta al arrancar qué versión tiene ese alias. Cada respuesta de POST /predict incluye modelo, alias y version, como en el ejemplo de petición y respuesta de arriba. Si el modelo no se pudo cargar, la API responde 503 con el mensaje Modelo no disponible. Como el modelo y la versión se leen una sola vez al arrancar, si el alias cambia de versión hay que reiniciar el servicio api.
+
+### Dónde ver el linaje
+
+En la interfaz de MLflow, en Models, mibici-equipo06-p2-riesgo, al abrir una versión se ven estos tags, que guardan mibici/modeling/registry.py (champion) y mibici/modeling/registry_challenger.py (challenger):
+
+| Tag | Qué contiene | En champion | En challenger |
+|---|---|---|---|
+| source_run_id | ID de la corrida de origen | Sí | Sí |
+| source_experiment_id y source_experiment_name | Experimento de origen | Sí | No |
+| git_commit | Commit de Git con el que se entrenó | Sí | Sí |
+| version_datos | Hash SHA-256 de references/data_manifest.csv | Sí | Sí |
+| umbral | Umbral de las alertas de riesgo | Sí | No |
+
 ## Pruebas automatizadas
 
 Todas las pruebas del proyecto se ejecutan con un solo comando, desde la raíz del repositorio y con el entorno virtual activo:
