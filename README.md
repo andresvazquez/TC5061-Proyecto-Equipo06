@@ -929,6 +929,17 @@ python -m mibici.modeling.ab_test
 
 El ID exacto de la corrida, el commit y la versión de datos se consultan en MLflow Tracking y quedan como etiquetas en la versión registrada. La petición de ejemplo del README comprueba que la API responde con `modelo`, `alias champion` y `versión 1`.
 
+## Monitoreo y gobernanza
+
+Las evidencias de monitoreo y gobernanza permiten revisar la calidad operativa del modelo, comparar versiones y controlar el costo de inferencia:
+
+- **[Monitoreo de drift con Evidently](reports/evidently/data_drift.html):** responde si la distribución de los datos actuales cambió respecto al periodo de referencia. El resumen por variable está disponible en [`tabla_drift.csv`](reports/evidently/tabla_drift.csv).
+- **[Comparación A/B de P2](reports/ab_test/comparacion_p2.csv):** responde si el modelo `challenger` supera al `champion` con la regla de promoción definida. Los mismos resultados también están disponibles en [`comparacion_p2.json`](reports/ab_test/comparacion_p2.json).
+- **[Análisis FinOps](reports/finops/costo_inferencia.csv):** responde cuánto cuesta operar la inferencia bajo la carga medida. El escenario por número de réplicas está disponible en [`costo_inferencia_replicas.csv`](reports/finops/costo_inferencia_replicas.csv).
+- **[Model Card](#model-card):** documenta el propósito, los datos, el desempeño, las limitaciones, los riesgos y la gobernanza del modelo desplegado.
+
+En conjunto, estas evidencias permiten detectar cambios en los datos, decidir si una versión debe promoverse, estimar el costo operativo y mantener trazabilidad sobre el uso responsable del modelo.
+
 ## Flujo de trabajo con Git
 
 ### Rama principal protegida y Pull Requests
