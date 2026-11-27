@@ -172,7 +172,7 @@ Esta tabla lleva cada criterio de la rúbrica a la evidencia mínima para encont
 | Model Registry y linaje | `mibici/modeling/registry.py`, `registry_challenger.py` y `version_vigente.py`; carga en `app/modelo.py`, con versiones 1 y 2 y alias `champion`/`challenger` | [Model Registry y linaje de P2](#model-registry-y-linaje-de-p2) |
 | Despliegue y operación | `Containerfile`, `docker-compose.yml`, `.github/workflows/ci.yml`, `app/main.py` y `operacion/locustfile.py` | [Levantar el sistema con Docker Compose](#levantar-el-sistema-con-docker-compose), [Pipeline de CI/CD](#pipeline-de-cicd) y [Pruebas de carga y consumo de recursos](#pruebas-de-carga-y-consumo-de-recursos) |
 | Monitoreo y A/B | `reports/evidently/`, `mibici/monitoring/` y `reports/ab_test/` | [Monitoreo de drift](#monitoreo-de-drift) y [Versión alternativa y A/B testing](#versión-alternativa-y-ab-testing) |
-| Gobernanza | `references/data_manifest.csv`, `reports/finops/` y la sección [Model Card](#model-card) incorporada en 8d | [Análisis FinOps](#análisis-finops) y [Model Card](#model-card) |
+| Gobernanza | `references/data_manifest.csv`, `reports/finops/` y la sección [Model Card](#model-card) | [Monitoreo y gobernanza](#monitoreo-y-gobernanza), [Análisis FinOps](#análisis-finops) y [Model Card](#model-card) |
 
 --------
 
