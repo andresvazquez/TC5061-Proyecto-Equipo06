@@ -162,6 +162,18 @@ Servicios que levanta `docker-compose.yml`:
 | `mlflow` | 5000 | `MLFLOW_PORT` | Ninguna |
 | `api` | 8000 | `API_PORT` | `MLFLOW_TRACKING_URI=http://mlflow:5000` dentro de la red `mibici` |
 
+## Recorrido del proyecto final
+
+Esta tabla lleva cada criterio de la rúbrica a la evidencia mínima para encontrarlo en el repositorio. Los enlaces apuntan a la sección correspondiente del README o al archivo que contiene el resultado.
+
+| Criterio de la rúbrica | Evidencia en el repositorio | Dónde se explica |
+|---|---|---|
+| Estructura y seguimiento de experimentos | Cookiecutter en `mibici/`, ingesta en `mibici/dataset.py`, variables en `mibici/features.py` y cortes en `mibici/config.py`; ejecución en `MLproject` | [Estructura de carpetas](#estructura-de-carpetas) y [Experimento base](#experimento-base) |
+| Model Registry y linaje | `mibici/modeling/registry.py`, `registry_challenger.py` y `version_vigente.py`; carga en `app/modelo.py`, con versiones 1 y 2 y alias `champion`/`challenger` | [Model Registry y linaje de P2](#model-registry-y-linaje-de-p2) |
+| Despliegue y operación | `Containerfile`, `docker-compose.yml`, `.github/workflows/ci.yml`, `app/main.py` y `operacion/locustfile.py` | [Levantar el sistema con Docker Compose](#levantar-el-sistema-con-docker-compose), [Pipeline de CI/CD](#pipeline-de-cicd) y [Pruebas de carga y consumo de recursos](#pruebas-de-carga-y-consumo-de-recursos) |
+| Monitoreo y A/B | `reports/evidently/`, `mibici/monitoring/` y `reports/ab_test/` | [Monitoreo de drift](#monitoreo-de-drift) y [Versión alternativa y A/B testing](#versión-alternativa-y-ab-testing) |
+| Gobernanza | `references/data_manifest.csv`, `reports/finops/` y la sección [Model Card](#model-card) incorporada en 8d | [Análisis FinOps](#análisis-finops) y [Model Card](#model-card) |
+
 --------
 
 ## Instalación
