@@ -868,7 +868,7 @@ El flujo usa `mlflow run` sobre el entry point `train` de `MLproject`, con el ex
 
 ### Evaluation Results
 
-En el conjunto de prueba de julio a septiembre de 2026, la versión champion obtuvo precisión 0.3274, recall 0.9084, F1 0.4814, PR-AUC 0.6332 y 15,953 falsas alarmas. En la comparación fuera de línea con la versión alternativa, sobre las mismas 100,000 filas, el recall fue 0.9084 para el champion y 0.9065 para el challenger; las falsas alarmas bajaron 1.8 %, por debajo del 5 % exigido por la regla de promoción, así que se conservó el champion. Las cifras están en `reports/ab_test/comparacion_p2.csv` y en la sección de A/B testing del README.
+En el conjunto de prueba de julio a septiembre de 2026, la versión champion obtuvo precisión 0.327, recall 0.909, F1 0.481, PR-AUC 0.634 y 162,418 falsas alarmas, según la corrida `p2-rf-features-trial-2` en MLflow Tracking. En la comparación fuera de línea con la versión alternativa, sobre una muestra de 100,000 filas del periodo actual, el recall fue 0.9084 para el champion y 0.9065 para el challenger; las falsas alarmas bajaron 1.8 % (15,953 a 15,669), por debajo del 5 % exigido por la regla de promoción, así que se conservó el champion. Las cifras de la comparación están en `reports/ab_test/comparacion_p2.csv` y en la sección de A/B testing del README.
 
 ### Limitations
 
